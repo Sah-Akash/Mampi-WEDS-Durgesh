@@ -1,0 +1,202 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --royal-burgundy: #4A101D;
+    --dark-wine: #2A0812;
+    --antique-gold: #C6A15B;
+    --champagne-gold: #E7D6AD;
+    --warm-ivory: #F8F0E3;
+    --muted-rose: #B87978;
+    --forest-green: #24392D;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #2A0812;
+    color: #F8F0E3;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+
+  .font-devanagari {
+    font-family: 'Tiro Devanagari Sanskrit', 'Cormorant Garamond', serif;
+  }
+
+  .font-mono-tabular {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* 3D Perspective for Palace Doors */
+.perspective-palace {
+  perspective: 1800px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.door-left-hinge {
+  transform-origin: left center;
+}
+
+.door-right-hinge {
+  transform-origin: right center;
+}
+
+/* Subtle Jaali & Sandstone Texture Overlay */
+.bg-royal-jaali {
+  background-image: radial-gradient(circle at 50% 30%, rgba(198, 161, 91, 0.08) 0%, transparent 65%),
+    repeating-linear-gradient(
+      45deg,
+      rgba(198, 161, 91, 0.025) 0px,
+      rgba(198, 161, 91, 0.025) 1px,
+      transparent 1px,
+      transparent 16px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(198, 161, 91, 0.025) 0px,
+      rgba(198, 161, 91, 0.025) 1px,
+      transparent 1px,
+      transparent 16px
+    );
+}
+
+.bg-ivory-parchment {
+  background-color: #F8F0E3;
+  background-image: radial-gradient(circle at 50% 50%, rgba(255, 252, 245, 0.7) 0%, rgba(231, 214, 173, 0.35) 100%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(74, 16, 29, 0.012) 0px,
+      rgba(74, 16, 29, 0.012) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+}
+
+/* Keyframe Animations */
+@keyframes floatPetal {
+  0% {
+    transform: translate3d(0, -10%, 0) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.75;
+  }
+  85% {
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate3d(45px, 105vh, 0) rotate(320deg);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmerDust {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(0.85);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translate3d(8px, -18px, 0) scale(1.15);
+    opacity: 0.75;
+  }
+}
+
+@keyframes diyaFlame {
+  0%, 100% {
+    transform: scaleY(1) scaleX(1) rotate(-1deg);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scaleY(1.09) scaleX(0.94) rotate(1.5deg);
+    opacity: 1;
+  }
+}
+
+@keyframes goldSweep {
+  0% {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-20deg);
+  }
+}
+
+.animate-petal {
+  animation: floatPetal 14s linear infinite;
+}
+
+.animate-dust {
+  animation: shimmerDust 6s ease-in-out infinite;
+}
+
+.animate-diya {
+  animation: diyaFlame 2.4s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.btn-gold-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-gold-sweep::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(248, 240, 227, 0.35),
+    transparent
+  );
+  transform: translateX(-140%) skewX(-20deg);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-gold-sweep:hover::after {
+  transform: translateX(280%) skewX(-20deg);
+}
+
+/* Reduced Motion Compliance */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-petal,
+  .animate-dust,
+  .animate-diya {
+    animation: none !important;
+  }
+}
+
+/* Print-Friendly Royal Keepsake Invitation Styles */
+@media print {
+  body {
+    background: #F8F0E3 !important;
+    color: #2A0812 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only-card {
+    box-shadow: none !important;
+    border: 2px solid #C6A15B !important;
+    margin: 0 !important;
+    padding: 2rem !important;
+    page-break-inside: avoid;
+  }
+}

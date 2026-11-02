@@ -1,0 +1,6 @@
+{
+  "name": "Royal Indian Wedding Invitation — [BRIDE NAME] & [GROOM NAME]",
+  "description": "With love and the blessings of our families, we invite you to celebrate the royal wedding of [BRIDE NAME] and [GROOM NAME] on [WEDDING DATE] in [CITY].",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
