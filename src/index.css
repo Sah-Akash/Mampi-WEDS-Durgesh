@@ -11,11 +11,26 @@
     --forest-green: #24392D;
   }
 
+  html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
   body {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: #2A0812;
     color: #F8F0E3;
-    overflow-x: hidden;
+    overflow-x: clip;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   h1, h2, h3, h4, .font-display {
@@ -32,21 +47,15 @@
   }
 }
 
-/* 3D Perspective for Palace Doors */
-.perspective-palace {
-  perspective: 1800px;
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.preserve-3d {
-  transform-style: preserve-3d;
-}
-
-.door-left-hinge {
-  transform-origin: left center;
-}
-
-.door-right-hinge {
-  transform-origin: right center;
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* Subtle Jaali & Sandstone Texture Overlay */
@@ -116,16 +125,7 @@
   }
   50% {
     transform: scaleY(1.09) scaleX(0.94) rotate(1.5deg);
-    opacity: 1;
-  }
-}
-
-@keyframes goldSweep {
-  0% {
-    transform: translateX(-120%) skewX(-20deg);
-  }
-  100% {
-    transform: translateX(220%) skewX(-20deg);
+    opacity: 0.98;
   }
 }
 

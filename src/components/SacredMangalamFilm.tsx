@@ -64,8 +64,7 @@ function computeScrollHoldPiecewise(
   holds: { id: string; fs: number; fe: number }[],
   maxFrameIdx: number,
   baseTravelVh: number,
-  holdDurationVh: number,
-  fadeOutFrames: number
+  holdDurationVh: number
 ) {
   const sorted = [...holds].sort((a, b) => a.fs - b.fs);
   const totalHoldFrames = sorted.reduce((acc, h) => acc + Math.max(0, h.fe - h.fs), 0);
@@ -96,7 +95,7 @@ function computeScrollHoldPiecewise(
     windows[h.id] = {
       start: holdStart,
       end: currentScroll,
-      fadeEnd: currentScroll + ((fadeOutFrames / maxFrameIdx) * baseTravelVh) / totalTravel,
+      fadeEnd: currentScroll,
     };
 
     prevFrame = L;
@@ -147,20 +146,30 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+
+  const stackElsRef = useRef<Record<string, HTMLDivElement | null>>({});
+  const lineElsRef = useRef<Record<string, HTMLDivElement | null>>({});
+  const scrollHintElRef = useRef<HTMLDivElement | null>(null);
 
   const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() =>
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
   );
-  const [scrollProgress, setScrollProgress] = useState<number>(0);
-  const [showScrollHint, setShowScrollHint] = useState<boolean>(false);
-  const [loadedCount, setLoadedCount] = useState<number>(0);
+  const [isInitialReady, setIsInitialReady] = useState<boolean>(false);
 
   useEffect(() => {
+    let resizeTimer = 0;
     const checkViewport = () => {
-      setIsMobileViewport(window.innerWidth < 768);
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        setIsMobileViewport(window.innerWidth < 768);
+      }, 120);
     };
-    window.addEventListener('resize', checkViewport);
-    return () => window.removeEventListener('resize', checkViewport);
+    window.addEventListener('resize', checkViewport, { passive: true });
+    return () => {
+      window.clearTimeout(resizeTimer);
+      window.removeEventListener('resize', checkViewport);
+    };
   }, []);
 
   useEffect(() => {
@@ -186,12 +195,6 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
     };
   }, [isLocked]);
 
-  useEffect(() => {
-    if (!isLocked) {
-      setShowScrollHint(true);
-    }
-  }, [isLocked]);
-
   const showEnglish = language === 'en' || language === 'bilingual';
   const showHindi = language === 'hi' || language === 'bilingual';
 
@@ -208,8 +211,8 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
       {
         id: 'inv-greeting',
         label: 'Invitation',
-        holdFramesDesktop: [120, 154],
-        holdFramesMobile: [96, 112],
+        holdFramesDesktop: [126, 154],
+        holdFramesMobile: [100, 112],
         positionDesktop: { left: '50%', top: '53%', width: '54%' },
         positionMobile: { left: '57%', top: '50.5%', width: '58%' },
         blurBg: false,
@@ -347,8 +350,8 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
       {
         id: 'haldi-title',
         label: 'Mehendi (22 Nov)',
-        holdFramesDesktop: [182, 199],
-        holdFramesMobile: [150, 160],
+        holdFramesDesktop: [186, 199],
+        holdFramesMobile: [152, 160],
         positionDesktop: { left: '50%', top: '26%' },
         positionMobile: { left: '50%', top: '25%' },
         blurBg: true,
@@ -420,8 +423,8 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
       {
         id: 'reception-title',
         label: 'Pujan & Haldi (23 Nov)',
-        holdFramesDesktop: [305, 320],
-        holdFramesMobile: [248, 257],
+        holdFramesDesktop: [308, 320],
+        holdFramesMobile: [250, 257],
         positionDesktop: { left: '50%', top: '30%' },
         positionMobile: { left: '50%', top: '30%' },
         blurBg: true,
@@ -493,8 +496,8 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
       {
         id: 'wedding-title',
         label: 'Wedding (24 Nov)',
-        holdFramesDesktop: [370, 378],
-        holdFramesMobile: [299, 307],
+        holdFramesDesktop: [372, 378],
+        holdFramesMobile: [301, 307],
         positionDesktop: { left: '50%', top: '30%' },
         positionMobile: { left: '50%', top: '30%' },
         blurBg: true,
@@ -566,8 +569,8 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
       {
         id: 'rsvp-title',
         label: 'RSVP',
-        holdFramesDesktop: [425, 440],
-        holdFramesMobile: [358, 363],
+        holdFramesDesktop: [429, 439],
+        holdFramesMobile: [359, 363],
         positionDesktop: { left: '50%', top: '67%', width: '80%' },
         positionMobile: { left: '50%', top: '55%', width: '82%' },
         blurBg: false,
@@ -652,7 +655,7 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
         fe: Math.round(range[1]),
       };
     });
-    return computeScrollHoldPiecewise(holds, maxFrameIdx, 500, 95, 8);
+    return computeScrollHoldPiecewise(holds, maxFrameIdx, 520, 120);
   }, [holdStacks, isMobileViewport, maxFrameIdx]);
 
   const totalHeightVh = 100 + piecewise.totalTravel;
@@ -660,26 +663,50 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
   const imagesRef = useRef<(HTMLImageElement | null)[]>([]);
   const loadedFlagsRef = useRef<boolean[]>([]);
   const currentFrameIdxRef = useRef<number>(0);
+  const lastDrawnFrameIdxRef = useRef<number>(-1);
+  const canvasMetricsRef = useRef<{ cw: number; ch: number }>({ cw: 0, ch: 0 });
 
-  const drawFrameToCanvas = useCallback(
-    (targetFrameFloat: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
+  const targetProgressRef = useRef<number>(0);
+  const smoothedProgressRef = useRef<number>(0);
 
+  const syncCanvasAndScrollMetrics = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
       const rect = canvas.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return;
-
+      const width = rect.width || window.innerWidth;
+      const height = rect.height || window.innerHeight;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const cw = Math.round(rect.width * dpr);
-      const ch = Math.round(rect.height * dpr);
+      const cw = Math.max(1, Math.round(width * dpr));
+      const ch = Math.max(1, Math.round(height * dpr));
 
       if (canvas.width !== cw || canvas.height !== ch) {
         canvas.width = cw;
         canvas.height = ch;
-      }
+        canvasMetricsRef.current = { cw, ch };
+        lastDrawnFrameIdxRef.current = -1;
 
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'medium';
+          ctxRef.current = ctx;
+        }
+      }
+    }
+  }, []);
+
+  const drawFrameToCanvas = useCallback(
+    (targetFrameFloat: number, forceRedraw = false) => {
+      let ctx = ctxRef.current;
+      let { cw, ch } = canvasMetricsRef.current;
+
+      if (!ctx || cw === 0 || ch === 0) {
+        syncCanvasAndScrollMetrics();
+        ctx = ctxRef.current;
+        cw = canvasMetricsRef.current.cw;
+        ch = canvasMetricsRef.current.ch;
+        if (!ctx || cw === 0 || ch === 0) return;
+      }
 
       const clampedIdx = Math.max(0, Math.min(maxFrameIdx, Math.round(targetFrameFloat)));
       currentFrameIdxRef.current = clampedIdx;
@@ -700,6 +727,10 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
         }
       }
 
+      if (!forceRedraw && chosenIdx >= 0 && chosenIdx === lastDrawnFrameIdxRef.current) {
+        return;
+      }
+
       const img = chosenIdx >= 0 ? imagesRef.current[chosenIdx] : null;
       if (img && img.naturalWidth > 0 && img.naturalHeight > 0) {
         const iw = img.naturalWidth;
@@ -708,8 +739,9 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
         const dw = iw * scale;
         const dh = ih * scale;
         ctx.clearRect(0, 0, cw, ch);
-        ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
-      } else {
+        ctx.drawImage(img, (cw - dw) * 0.5, (ch - dh) * 0.5, dw, dh);
+        lastDrawnFrameIdxRef.current = chosenIdx;
+      } else if (lastDrawnFrameIdxRef.current === -1) {
         const grad = ctx.createRadialGradient(
           cw * 0.5,
           ch * 0.45,
@@ -725,52 +757,188 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
         ctx.fillRect(0, 0, cw, ch);
       }
     },
-    [frameCount, maxFrameIdx]
+    [frameCount, maxFrameIdx, syncCanvasAndScrollMetrics]
   );
 
+  const applyProgressToDOM = useCallback(
+    (progress: number) => {
+      if (scrollHintElRef.current) {
+        const hideHint = progress > 0.004;
+        scrollHintElRef.current.style.opacity = hideHint ? '0' : '1';
+      }
+
+      const drawnFrame = lastDrawnFrameIdxRef.current;
+
+      for (let sIdx = 0; sIdx < holdStacks.length; sIdx++) {
+        const stack = holdStacks[sIdx];
+        const stackEl = stackElsRef.current[stack.id];
+        const hold = piecewise.windows[stack.id];
+        if (!stackEl || !hold) continue;
+
+        const [fs, fe] = isMobileViewport ? stack.holdFramesMobile : stack.holdFramesDesktop;
+
+        // Ensure the actual rendered canvas frame has reached this scene's hold range
+        // so text never appears early over an earlier transition frame
+        const isFrameInScene =
+          drawnFrame >= fs - 3 &&
+          (stack.holdFadeOut === false ? drawnFrame <= maxFrameIdx : drawnFrame <= fe + 3);
+
+        const holdSpan = Math.max(1e-4, hold.end - hold.start);
+        // Delay text appearance until the camera transition has settled (18% into the hold window)
+        const settleStart = hold.start + 0.18 * holdSpan;
+        const inRampEnd = hold.start + 0.32 * holdSpan;
+        // Fade text out completely BEFORE hold.end (from 84% to 98% of the hold window)
+        // so text disappears before the camera begins transitioning to the next scene
+        const outRampStart = hold.start + 0.84 * holdSpan;
+        const outRampEnd = hold.start + 0.98 * holdSpan;
+
+        const rawStackOpacity = interpolatePiecewise(
+          progress,
+          [settleStart, inRampEnd, outRampStart, outRampEnd],
+          stack.holdFadeOut !== false ? [0, 1, 1, 0] : [0, 1, 1, 1]
+        );
+
+        const stackOpacity = isFrameInScene ? rawStackOpacity : 0;
+
+        if (stackOpacity <= 0.004) {
+          if (stackEl.style.visibility !== 'hidden') {
+            stackEl.style.visibility = 'hidden';
+            stackEl.style.opacity = '0';
+            stackEl.style.pointerEvents = 'none';
+          }
+          continue;
+        }
+
+        stackEl.style.visibility = 'visible';
+        stackEl.style.opacity = stackOpacity.toFixed(3);
+        stackEl.style.pointerEvents = stackOpacity > 0.5 ? 'auto' : 'none';
+
+        // Cascade lines in between 18% and 68% of the hold window (after camera settles)
+        const cascadeSpan = 0.50 * holdSpan;
+        const lineCount = Math.max(1, stack.lines.length);
+        const lineStep = cascadeSpan / lineCount;
+        const lineFadeSpan = Math.max(0.001, lineStep * 1.15);
+
+        for (let lIdx = 0; lIdx < stack.lines.length; lIdx++) {
+          const line = stack.lines[lIdx];
+          const lineEl = lineElsRef.current[`${stack.id}__${line.id}`];
+          if (!lineEl) continue;
+
+          const inAt = settleStart + lIdx * lineStep;
+          const lineOpacity = interpolatePiecewise(
+            progress,
+            [inAt, inAt + lineFadeSpan],
+            [0, 1]
+          );
+          const lineTranslateY = interpolatePiecewise(
+            progress,
+            [inAt, inAt + lineFadeSpan],
+            [20, 0]
+          );
+
+          lineEl.style.opacity = lineOpacity.toFixed(3);
+          lineEl.style.transform = `translate3d(0, ${lineTranslateY.toFixed(1)}px, 0)`;
+        }
+      }
+    },
+    [holdStacks, piecewise, isMobileViewport, maxFrameIdx]
+  );
+
+  // Preload & pre-decode frames: load hold windows and global keyframes FIRST so scene frames are never behind
   useEffect(() => {
     let cancelled = false;
     imagesRef.current = new Array(frameCount).fill(null);
     loadedFlagsRef.current = new Array(frameCount).fill(false);
-    setLoadedCount(0);
+    lastDrawnFrameIdxRef.current = -1;
+    setIsInitialReady(false);
 
     const getFrameUrl = (idx: number) =>
       `${framesBaseUrl}/${String(idx).padStart(4, '0')}.webp`;
 
     const prioritySet = new Set<number>([0]);
+    // 1. All hold window frames first so every text scene has its exact backdrop ready immediately
     holdStacks.forEach((s) => {
       const [fs, fe] = isMobileViewport ? s.holdFramesMobile : s.holdFramesDesktop;
       prioritySet.add(fs);
       prioritySet.add(Math.floor((fs + fe) / 2));
       prioritySet.add(fe);
+      for (let f = Math.max(0, fs - 2); f <= Math.min(maxFrameIdx, fe + 2); f++) {
+        prioritySet.add(f);
+      }
     });
+    // 2. Strided keyframes across the entire film so no scroll position ever lags behind
     for (let i = 0; i < frameCount; i += 8) prioritySet.add(i);
+    for (let i = 0; i < frameCount; i += 4) prioritySet.add(i);
     for (let i = 0; i < frameCount; i += 2) prioritySet.add(i);
     for (let i = 0; i < frameCount; i++) prioritySet.add(i);
 
-    const loadQueue = Array.from(prioritySet).filter((i) => i >= 0 && i < frameCount);
-    let pointer = 0;
+    const pendingSet = new Set<number>(
+      Array.from(prioritySet).filter((i) => i >= 0 && i < frameCount)
+    );
+    const orderedQueue = Array.from(pendingSet);
+    let queueCursor = 0;
     let doneCount = 0;
-    const CONCURRENCY = 8;
+    let readySignaled = false;
+    const CONCURRENCY = 10;
+
+    const pickNextFrame = (): number | null => {
+      const cur = currentFrameIdxRef.current;
+      for (let offset = 0; offset <= 16; offset++) {
+        const candidate = cur + offset;
+        if (candidate < frameCount && pendingSet.has(candidate)) {
+          pendingSet.delete(candidate);
+          return candidate;
+        }
+      }
+      while (queueCursor < orderedQueue.length) {
+        const candidate = orderedQueue[queueCursor++];
+        if (pendingSet.has(candidate)) {
+          pendingSet.delete(candidate);
+          return candidate;
+        }
+      }
+      return null;
+    };
 
     const loadNext = () => {
-      if (cancelled || pointer >= loadQueue.length) return;
-      const frameIdx = loadQueue[pointer++];
+      if (cancelled) return;
+      const frameIdx = pickNextFrame();
+      if (frameIdx === null) return;
+
       const img = new Image();
       img.decoding = 'async';
 
-      img.onload = () => {
+      const finalizeFrame = () => {
         if (cancelled) return;
         imagesRef.current[frameIdx] = img;
         loadedFlagsRef.current[frameIdx] = true;
         doneCount++;
-        if (doneCount % 12 === 0 || doneCount === 1 || doneCount === frameCount) {
-          setLoadedCount(doneCount);
+
+        if (!readySignaled && (doneCount >= 18 || frameIdx === 0)) {
+          if (doneCount >= 18) {
+            readySignaled = true;
+            setIsInitialReady(true);
+          }
         }
-        if (frameIdx === 0 || Math.abs(frameIdx - currentFrameIdxRef.current) <= 8) {
-          drawFrameToCanvas(currentFrameIdxRef.current);
+
+        if (
+          frameIdx === 0 ||
+          Math.abs(frameIdx - currentFrameIdxRef.current) <= 8
+        ) {
+          drawFrameToCanvas(currentFrameIdxRef.current, true);
+          applyProgressToDOM(smoothedProgressRef.current);
         }
+
         loadNext();
+      };
+
+      img.onload = () => {
+        if (cancelled) return;
+        if (typeof img.decode === 'function') {
+          img.decode().then(finalizeFrame).catch(finalizeFrame);
+        } else {
+          finalizeFrame();
+        }
       };
 
       img.onerror = () => {
@@ -788,49 +956,102 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [frameCount, framesBaseUrl, holdStacks, isMobileViewport, drawFrameToCanvas]);
+  }, [
+    frameCount,
+    maxFrameIdx,
+    framesBaseUrl,
+    holdStacks,
+    isMobileViewport,
+    drawFrameToCanvas,
+    applyProgressToDOM,
+  ]);
 
+  // Buttery-smooth inertial scroll scrubbing loop (zero React state updates)
   useEffect(() => {
     let rafId = 0;
+    let lastTime = performance.now();
 
-    const updateFromScroll = () => {
-      rafId = 0;
+    const computeTargetProgress = () => {
       const el = containerRef.current;
       if (!el) return;
-
       const rect = el.getBoundingClientRect();
       const totalScrollable = Math.max(1, el.offsetHeight - window.innerHeight);
       const scrolled = Math.max(0, Math.min(totalScrollable, -rect.top));
-      const progress = scrolled / totalScrollable;
+      targetProgressRef.current = scrolled / totalScrollable;
+    };
 
-      if (scrolled > 8) {
-        setShowScrollHint(false);
-      }
+    const tick = (now: number) => {
+      const dt = Math.min(48, Math.max(4, now - lastTime));
+      lastTime = now;
 
-      setScrollProgress(progress);
+      const target = targetProgressRef.current;
+      const current = smoothedProgressRef.current;
+      const diff = target - current;
+
+      // Exponential smoothing for silky 60/120fps frame interpolation
+      const alpha = 1 - Math.pow(1 - 0.24, dt / 16.667);
+      const next = Math.abs(diff) < 0.00012 ? target : current + diff * alpha;
+      smoothedProgressRef.current = next;
+
       const normalizedFrame = interpolatePiecewise(
-        progress,
+        next,
         piecewise.inputs,
         piecewise.outputs
       );
       drawFrameToCanvas(normalizedFrame * maxFrameIdx);
-    };
+      applyProgressToDOM(next);
 
-    const onScrollOrResize = () => {
-      if (!rafId) {
-        rafId = window.requestAnimationFrame(updateFromScroll);
+      if (Math.abs(target - next) > 0.00012) {
+        rafId = window.requestAnimationFrame(tick);
+      } else {
+        rafId = 0;
       }
     };
 
-    updateFromScroll();
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', onScrollOrResize);
+    const startLoopIfNeeded = () => {
+      if (!rafId) {
+        lastTime = performance.now();
+        rafId = window.requestAnimationFrame(tick);
+      }
+    };
+
+    const onScroll = () => {
+      computeTargetProgress();
+      startLoopIfNeeded();
+    };
+
+    const onResize = () => {
+      syncCanvasAndScrollMetrics();
+      computeTargetProgress();
+      smoothedProgressRef.current = targetProgressRef.current;
+      const normalizedFrame = interpolatePiecewise(
+        smoothedProgressRef.current,
+        piecewise.inputs,
+        piecewise.outputs
+      );
+      drawFrameToCanvas(normalizedFrame * maxFrameIdx, true);
+      applyProgressToDOM(smoothedProgressRef.current);
+    };
+
+    syncCanvasAndScrollMetrics();
+    computeTargetProgress();
+    smoothedProgressRef.current = targetProgressRef.current;
+    const initialFrame = interpolatePiecewise(
+      smoothedProgressRef.current,
+      piecewise.inputs,
+      piecewise.outputs
+    );
+    drawFrameToCanvas(initialFrame * maxFrameIdx, true);
+    applyProgressToDOM(smoothedProgressRef.current);
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize, { passive: true });
     return () => {
       if (rafId) window.cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', onScrollOrResize);
-      window.removeEventListener('resize', onScrollOrResize);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
     };
-  }, [piecewise, maxFrameIdx, drawFrameToCanvas]);
+  }, [piecewise, maxFrameIdx, drawFrameToCanvas, applyProgressToDOM, syncCanvasAndScrollMetrics]);
 
   const handleOpenMapUrl = (rawUrl?: string, fallbackVenue?: string) => {
     if (rawUrl && !rawUrl.includes('[') && rawUrl.startsWith('http')) {
@@ -851,20 +1072,6 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
 
   return (
     <div className="relative w-full select-none bg-[#241316] no-print">
-      {/* BLURRED DESKTOP GUTTER BACKDROP */}
-      <div
-        className="fixed inset-0 z-0 overflow-hidden pointer-events-none"
-        aria-hidden="true"
-      >
-        <img
-          src={`${DESKTOP_FRAMES_BASE}/0000.webp`}
-          alt=""
-          className="w-full h-full object-cover scale-110"
-          style={{ filter: 'blur(24px) brightness(0.65)' }}
-          draggable={false}
-        />
-      </div>
-
       {/* MAIN SCROLL-SCRUBBED FILM STAGE CONTAINER */}
       <div
         ref={containerRef}
@@ -879,91 +1086,69 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
             <canvas
               ref={canvasRef}
               className="absolute inset-0 w-full h-full block"
+              style={{ willChange: 'contents', transform: 'translateZ(0)' }}
             />
 
-            {loadedCount < 25 && (
-              <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 px-3.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-[11px] tracking-widest uppercase text-white/85 pointer-events-none">
+            {!isInitialReady && (
+              <div className="absolute top-5 left-1/2 -translate-x-1/2 z-30 px-3.5 py-1 rounded-full bg-black/65 border border-white/20 text-[10px] sm:text-[11px] tracking-widest uppercase text-white/85 whitespace-nowrap pointer-events-none">
                 Loading Mampi &amp; Durgesh’s Wedding Film…
               </div>
             )}
 
-            {/* HOLD TEXT STACKS OVERLAY */}
+            {/* HOLD TEXT STACKS OVERLAY (Driven directly via DOM refs for 0 React re-renders) */}
             {holdStacks.map((stack) => {
-              const hold = piecewise.windows[stack.id];
-              if (!hold) return null;
-
               const pos = isMobileViewport ? stack.positionMobile : stack.positionDesktop;
-              const holdSpan = Math.max(1e-4, hold.end - hold.start);
-              const lineCount = Math.max(1, stack.lines.length);
-              const lineStep = (0.7 * holdSpan) / lineCount;
-              const lineFadeSpan = Math.max(0.001, lineStep * 0.9);
-              const inRampEnd = hold.start + Math.min(0.02, 0.3 * holdSpan);
-
-              const stackOpacity = interpolatePiecewise(
-                scrollProgress,
-                [hold.start, inRampEnd, hold.end, hold.fadeEnd],
-                stack.holdFadeOut !== false ? [0, 1, 1, 0] : [0, 1, 1, 1]
-              );
-
-              if (stackOpacity <= 0.005) return null;
 
               return (
                 <div
                   key={stack.id}
+                  ref={(el) => {
+                    stackElsRef.current[stack.id] = el;
+                  }}
                   data-text-stack={stack.id}
                   className="absolute z-20 flex flex-col items-center text-center"
                   style={{
                     left: pos.left,
                     top: pos.top,
-                    width: pos.width ?? (stack.blurBg ? 'auto' : '50%'),
+                    width: pos.width ?? (stack.blurBg ? (isMobileViewport ? '88%' : 'auto') : '50%'),
                     maxWidth: '92vw',
-                    transform: 'translate(-50%, -50%)',
-                    opacity: stackOpacity,
-                    pointerEvents: stackOpacity > 0.5 ? 'auto' : 'none',
+                    transform: 'translate3d(-50%, -50%, 0)',
+                    opacity: 0,
+                    visibility: 'hidden',
+                    pointerEvents: 'none',
+                    willChange: 'opacity',
                   }}
                 >
                   {stack.blurBg && (
                     <div
-                      className="absolute inset-0 -mx-14 -my-10 sm:-mx-24 sm:-my-16 rounded-2xl pointer-events-none"
+                      className="absolute inset-0 -mx-8 -my-7 sm:-mx-24 sm:-my-16 rounded-2xl pointer-events-none"
                       style={{
                         background:
-                          'radial-gradient(ellipse, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0) 68%)',
-                        backdropFilter: 'blur(12px)',
-                        WebkitBackdropFilter: 'blur(12px)',
-                        maskImage:
-                          'radial-gradient(ellipse, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0) 68%)',
-                        WebkitMaskImage:
-                          'radial-gradient(ellipse, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0) 68%)',
+                          'radial-gradient(ellipse at center, rgba(16, 4, 8, 0.86) 0%, rgba(16, 4, 8, 0.62) 38%, rgba(16, 4, 8, 0.2) 64%, rgba(16, 4, 8, 0) 82%)',
                       }}
                     />
                   )}
 
                   <div
                     className={`relative z-10 flex flex-col items-center text-center w-full ${
-                      stack.blurBg ? 'px-6 py-5 sm:px-14 sm:py-10' : ''
+                      stack.blurBg ? 'px-4 py-4 sm:px-14 sm:py-10' : ''
                     }`}
                   >
-                    {stack.lines.map((line, lineIdx) => {
-                      const inAt = hold.start + lineIdx * lineStep;
-                      const lineOpacity = interpolatePiecewise(
-                        scrollProgress,
-                        [inAt, inAt + lineFadeSpan],
-                        [0, 1]
-                      );
-                      const lineTranslateY = interpolatePiecewise(
-                        scrollProgress,
-                        [inAt, inAt + lineFadeSpan],
-                        [26, 0]
-                      );
+                    {stack.lines.map((line) => {
+                      const lineRefKey = `${stack.id}__${line.id}`;
 
                       if (line.type === 'map') {
                         return (
                           <div
                             key={line.id}
+                            ref={(el) => {
+                              lineElsRef.current[lineRefKey] = el;
+                            }}
                             className="w-full flex justify-center"
                             style={{
-                              opacity: lineOpacity,
-                              transform: `translate3d(0, ${lineTranslateY}px, 0)`,
+                              opacity: 0,
+                              transform: 'translate3d(0, 22px, 0)',
+                              willChange: 'transform, opacity',
                               marginTop: line.spacingTop || '8px',
                               marginBottom: line.spacingBottom || '0px',
                             }}
@@ -977,7 +1162,7 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
                                 color: line.color,
                                 border: `1.5px solid ${line.color}`,
                                 borderRadius: '999px',
-                                padding: '0.3em 0.9em',
+                                padding: '0.35em 0.95em',
                                 lineHeight: 1,
                               }}
                               className="inline-flex items-center gap-1.5 hover:bg-white/15 transition-colors cursor-pointer whitespace-nowrap shrink-0"
@@ -1001,10 +1186,14 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
                       return (
                         <div
                           key={line.id}
+                          ref={(el) => {
+                            lineElsRef.current[lineRefKey] = el;
+                          }}
                           className="w-full"
                           style={{
-                            opacity: lineOpacity,
-                            transform: `translate3d(0, ${lineTranslateY}px, 0)`,
+                            opacity: 0,
+                            transform: 'translate3d(0, 22px, 0)',
+                            willChange: 'transform, opacity',
                           }}
                         >
                           <p
@@ -1016,7 +1205,7 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
                               color: line.color,
                               textShadow:
                                 line.color === '#ffffff' || line.color === '#E7D6AD'
-                                  ? '0 1px 10px rgba(0,0,0,0.45)'
+                                  ? '0 1px 10px rgba(0,0,0,0.55)'
                                   : 'none',
                               marginTop: line.spacingTop || '0px',
                               marginBottom: line.spacingBottom || '0px',
@@ -1033,64 +1222,67 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
               );
             })}
 
-            {/* OPENING "TAP TO OPEN" OVERLAY WITH COUPLE TITLE */}
-            {isLocked && (
-              <div className="fixed inset-0 z-40 flex flex-col items-center justify-between py-12 px-4 pointer-events-auto">
-                <div
-                  className="mt-2 text-center px-6 py-3 rounded-2xl bg-black/40 backdrop-blur-sm border border-white/15"
-                  style={{ textShadow: '0 2px 12px rgba(0,0,0,0.75)' }}
-                >
-                  <p className="font-devanagari text-xs sm:text-sm text-[#E7D6AD] tracking-widest">
-                    {config.sanskritInvocation}
-                  </p>
-                  <h1 className="font-display text-2xl sm:text-4xl text-white font-semibold tracking-wider mt-1">
-                    {config.brideName}{' '}
-                    <span className="italic font-normal text-[#E7D6AD]">weds</span>{' '}
-                    {config.groomName}
-                  </h1>
-                  <p className="text-xs sm:text-sm tracking-[0.2em] uppercase text-[#E7D6AD]/90 mt-1">
-                    24.11.2026 · {config.venueName}, {config.city}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={onUnlock}
-                  data-rec="gate-open"
-                  className="mb-[6vh] cursor-pointer focus:outline-none"
-                  aria-label="Tap to Open Mampi Weds Durgesh Wedding Invitation"
-                >
-                  <span
-                    style={{
-                      fontFamily: FONT_FAMILY_MAP.marcellus,
-                      fontSize: 'clamp(14px, 1.4vw, 18px)',
-                    }}
-                    className="inline-block rounded-full border border-white/50 bg-[#b8935a]/90 px-8 py-3.5 uppercase tracking-[0.18em] text-white shadow-lg backdrop-blur-sm animate-pulse hover:bg-[#b8935a] transition-transform active:scale-95 whitespace-nowrap shrink-0"
-                  >
-                    Tap to Open Invitation
-                  </span>
-                </button>
+            {/* OPENING "TAP TO OPEN" OVERLAY WITH SMOOTH GPU FADE TRANSITION */}
+            <div
+              className={`fixed inset-0 z-40 flex flex-col items-center justify-between py-8 sm:py-12 px-4 transition-all duration-700 ease-out ${
+                isLocked
+                  ? 'opacity-100 translate-y-0 pointer-events-auto'
+                  : 'opacity-0 -translate-y-3 pointer-events-none'
+              }`}
+              style={{ willChange: 'opacity, transform' }}
+            >
+              <div
+                className="mt-2 max-w-[92vw] text-center px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-black/55 border border-white/15"
+                style={{ textShadow: '0 2px 12px rgba(0,0,0,0.75)' }}
+              >
+                <p className="font-devanagari text-[11px] sm:text-sm text-[#E7D6AD] tracking-widest">
+                  {config.sanskritInvocation}
+                </p>
+                <h1 className="font-display text-2xl sm:text-4xl text-white font-semibold tracking-wider mt-0.5 sm:mt-1">
+                  {config.brideName}{' '}
+                  <span className="italic font-normal text-[#E7D6AD]">weds</span>{' '}
+                  {config.groomName}
+                </h1>
+                <p className="text-[10px] sm:text-sm tracking-[0.16em] sm:tracking-[0.2em] uppercase text-[#E7D6AD]/90 mt-1">
+                  24.11.2026 · {config.venueName}, {config.city}
+                </p>
               </div>
-            )}
 
-            {/* RADIAL BLURRED "SCROLL ↓" HINT CUE */}
-            {!isLocked && showScrollHint && (
-              <div className="pointer-events-none fixed inset-x-0 bottom-[6vh] z-[65] flex justify-center transition-opacity duration-500">
+              <button
+                type="button"
+                onClick={onUnlock}
+                data-rec="gate-open"
+                className="mb-[5vh] sm:mb-[6vh] cursor-pointer focus:outline-none"
+                aria-label="Tap to Open Mampi Weds Durgesh Wedding Invitation"
+              >
+                <span
+                  style={{
+                    fontFamily: FONT_FAMILY_MAP.marcellus,
+                    fontSize: 'clamp(13px, 3.6vw, 18px)',
+                  }}
+                  className="inline-block rounded-full border border-white/50 bg-[#b8935a] px-6 sm:px-8 py-3 sm:py-3.5 uppercase tracking-[0.16em] sm:tracking-[0.18em] text-white shadow-lg hover:bg-[#c6a15b] transition-transform duration-300 active:scale-95 whitespace-nowrap shrink-0"
+                >
+                  Tap to Open Invitation
+                </span>
+              </button>
+            </div>
+
+            {/* RADIAL "SCROLL ↓" HINT CUE */}
+            {!isLocked && (
+              <div
+                ref={scrollHintElRef}
+                className="pointer-events-none fixed inset-x-0 bottom-[6vh] z-[65] flex justify-center transition-opacity duration-500"
+                style={{ opacity: 1, willChange: 'opacity' }}
+              >
                 <div
                   className="relative flex flex-row items-center gap-2 px-10 py-5 text-white/95"
-                  style={{ textShadow: '0 1px 8px rgba(0,0,0,0.6)' }}
+                  style={{ textShadow: '0 1px 8px rgba(0,0,0,0.65)' }}
                 >
                   <div
                     className="absolute inset-0 rounded-full"
                     style={{
                       background:
-                        'radial-gradient(ellipse, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0) 68%)',
-                      backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)',
-                      maskImage:
-                        'radial-gradient(ellipse, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0) 68%)',
-                      WebkitMaskImage:
-                        'radial-gradient(ellipse, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0) 68%)',
+                        'radial-gradient(ellipse at center, rgba(16, 4, 8, 0.82) 0%, rgba(16, 4, 8, 0.45) 48%, rgba(16, 4, 8, 0) 76%)',
                     }}
                   />
                   <div className="relative z-10 flex items-center gap-2">
@@ -1113,7 +1305,7 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
       <button
         type="button"
         onClick={onToggleMusic}
-        className="fixed bottom-5 left-5 z-[70] w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
+        className="fixed bottom-5 left-5 z-[70] w-10 h-10 rounded-full bg-white/95 shadow-lg flex items-center justify-center transition-transform duration-200 active:scale-90 cursor-pointer"
         aria-label={isMusicPlaying ? 'Pause music' : 'Play music'}
       >
         <svg

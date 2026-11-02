@@ -1,0 +1,80 @@
+{
+  "entities": {
+    "Blessing": {
+      "title": "Blessing",
+      "description": "A wedding blessing and RSVP confirmation submitted by a guest for Mampi & Durgesh.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Full name of the guest submitting the blessing",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "relation": {
+          "type": "string",
+          "description": "Guest's relation or side (e.g., Bride's Brother, Groom's Friend)",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "guests": {
+          "type": "string",
+          "description": "Number of guests attending",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "attending": {
+          "type": "string",
+          "description": "Which wedding ceremonies the guest will attend",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "message": {
+          "type": "string",
+          "description": "The guest's blessing or message for the couple",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Formatted human-readable date and time label",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "likes": {
+          "type": "number",
+          "description": "Number of hearts/likes on this blessing"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public"],
+          "description": "Visibility scope for the Wall of Blessings query"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the blessing was created"
+        }
+      },
+      "required": [
+        "name",
+        "relation",
+        "guests",
+        "attending",
+        "message",
+        "timestamp",
+        "likes",
+        "visibility",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/blessings/{blessingId}": {
+      "schema": {
+        "$ref": "#/entities/Blessing"
+      },
+      "description": "Public Wall of Blessings and RSVP entries for Mampi Weds Durgesh."
+    }
+  }
+}

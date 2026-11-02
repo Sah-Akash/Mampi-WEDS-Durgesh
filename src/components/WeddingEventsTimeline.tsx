@@ -44,11 +44,11 @@ export const WeddingEventsTimeline: React.FC<WeddingEventsTimelineProps> = ({
   return (
     <section
       id="events"
-      className="relative py-20 sm:py-28 px-4 sm:px-8 bg-[#2A0812] bg-royal-jaali overflow-hidden no-print"
+      className="relative py-14 sm:py-24 px-3.5 sm:px-8 bg-[#2A0812] bg-royal-jaali overflow-hidden no-print"
     >
       <div className="max-w-6xl mx-auto">
         {/* Section Heading */}
-        <div className="text-center max-w-2xl mx-auto mb-14">
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
           <p className="text-xs tracking-[0.25em] uppercase text-[#C6A15B] mb-2">
             Chapter III · Vivah Utsav Itinerary
           </p>
@@ -140,11 +140,11 @@ export const WeddingEventsTimeline: React.FC<WeddingEventsTimelineProps> = ({
         <div className="relative">
           {/* Vertical Timeline Spine on Mobile/Tablet */}
           <div
-            className="lg:hidden absolute left-4 sm:left-6 top-4 bottom-4 w-[1px] bg-gradient-to-b from-[#C6A15B]/20 via-[#C6A15B] to-[#C6A15B]/20"
+            className="lg:hidden absolute left-2.5 sm:left-5 top-4 bottom-4 w-[1px] bg-gradient-to-b from-[#C6A15B]/20 via-[#C6A15B] to-[#C6A15B]/20"
             aria-hidden="true"
           />
 
-          <div className="space-y-10 sm:space-y-14">
+          <div className="space-y-8 sm:space-y-14">
             {enabledEvents.map((ev, index) => {
               const isEven = index % 2 === 1;
               const isSelected = ev.id === activeEventId;
@@ -154,11 +154,11 @@ export const WeddingEventsTimeline: React.FC<WeddingEventsTimelineProps> = ({
                   id={`event-card-${ev.id}`}
                   key={ev.id}
                   onClick={() => setActiveEventId(ev.id)}
-                  className={`relative pl-12 sm:pl-16 lg:pl-0 transition-all duration-300`}
+                  className={`relative pl-7 sm:pl-14 lg:pl-0 transition-all duration-300`}
                 >
                   {/* Mobile Timeline Node Marker */}
                   <div
-                    className="lg:hidden absolute left-1.5 sm:left-3.5 top-8 w-5 h-5 rotate-45 bg-[#4A101D] border border-[#C6A15B] flex items-center justify-center shadow-[0_0_12px_rgba(198,161,91,0.5)]"
+                    className="lg:hidden absolute left-0.5 sm:left-3 top-8 w-4 h-4 sm:w-5 sm:h-5 rotate-45 bg-[#4A101D] border border-[#C6A15B] flex items-center justify-center shadow-[0_0_12px_rgba(198,161,91,0.5)]"
                     aria-hidden="true"
                   >
                     <div className="w-1.5 h-1.5 bg-[#E7D6AD]" />

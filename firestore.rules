@@ -1,0 +1,81 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidBlessing(data) {
+      return data.keys().hasAll([
+          'name',
+          'relation',
+          'guests',
+          'attending',
+          'message',
+          'timestamp',
+          'likes',
+          'visibility',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'name',
+          'relation',
+          'guests',
+          'attending',
+          'message',
+          'timestamp',
+          'likes',
+          'visibility',
+          'createdAt'
+        ])
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 100
+        && data.relation is string && data.relation.size() >= 1 && data.relation.size() <= 100
+        && data.guests is string && data.guests.size() >= 1 && data.guests.size() <= 60
+        && data.attending is string && data.attending.size() >= 1 && data.attending.size() <= 120
+        && data.message is string && data.message.size() >= 1 && data.message.size() <= 1000
+        && data.timestamp is string && data.timestamp.size() >= 1 && data.timestamp.size() <= 60
+        && data.likes is int && data.likes >= 0 && data.likes <= 100000
+        && data.visibility is string && data.visibility.size() <= 20 && data.visibility == 'public'
+        && data.createdAt is timestamp;
+    }
+
+    match /blessings/{blessingId} {
+      allow get: if isValidId(blessingId) && existing().visibility == 'public';
+      allow list: if resource.data.visibility == 'public';
+
+      allow create: if isValidId(blessingId)
+        && isValidBlessing(incoming())
+        && (incoming().likes == 0 || incoming().likes == 1)
+        && incoming().createdAt == request.time;
+
+      allow update: if isValidId(blessingId)
+        && isValidBlessing(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['likes'])
+        && incoming().name == existing().name
+        && incoming().relation == existing().relation
+        && incoming().guests == existing().guests
+        && incoming().attending == existing().attending
+        && incoming().message == existing().message
+        && incoming().timestamp == existing().timestamp
+        && incoming().visibility == existing().visibility
+        && incoming().createdAt == existing().createdAt
+        && (incoming().likes == existing().likes + 1 || incoming().likes == existing().likes - 1);
+
+      allow delete: if false;
+    }
+  }
+}
