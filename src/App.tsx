@@ -5,8 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  DEFAULT_WEDDING_CONFIG,
-  SACRED_MANGALAM_DEMO_CONFIG,
+  MAMPI_DURGESH_WEDDING_CONFIG,
   LanguageMode,
   WeddingConfig,
 } from './config/weddingConfig';
@@ -20,20 +19,19 @@ import { PlaceholderCustomizerModal } from './components/PlaceholderCustomizerMo
 import { royalAudio } from './utils/royalAudio';
 
 export default function App() {
-  // Default to the Sacred Mangalam template configuration so it matches akhyankriti.com/invites/sacred-mangalam-template immediately,
-  // with a 1-click toggle to switch to strict [BRIDE NAME] / [GROOM NAME] placeholders.
-  const [config, setConfig] = useState<WeddingConfig>(SACRED_MANGALAM_DEMO_CONFIG);
-  const [isUsingPlaceholders, setIsUsingPlaceholders] = useState<boolean>(false);
+  const [config, setConfig] = useState<WeddingConfig>(MAMPI_DURGESH_WEDDING_CONFIG);
   const [isGateLocked, setIsGateLocked] = useState<boolean>(true);
-  const [language] = useState<LanguageMode>('bilingual');
+  const [language, setLanguage] = useState<LanguageMode>(
+    MAMPI_DURGESH_WEDDING_CONFIG.preferredLanguage
+  );
   const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(false);
   const [isCustomizerOpen, setIsCustomizerOpen] = useState<boolean>(false);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
 
   // Sync document title
   useEffect(() => {
-    document.title = `${config.brideName} & ${config.groomName} | Sacred Mangalam Wedding Invitation`;
-  }, [config.brideName, config.groomName]);
+    document.title = `${config.brideName} Weds ${config.groomName} | 24.11.2026 · ${config.city}`;
+  }, [config.brideName, config.groomName, config.city]);
 
   // Stop audio on unmount
   useEffect(() => {
@@ -53,20 +51,10 @@ export default function App() {
     setIsMusicPlaying(nextState);
   };
 
-  const handleTogglePlaceholders = () => {
-    if (isUsingPlaceholders) {
-      setConfig(SACRED_MANGALAM_DEMO_CONFIG);
-      setIsUsingPlaceholders(false);
-    } else {
-      setConfig(DEFAULT_WEDDING_CONFIG);
-      setIsUsingPlaceholders(true);
-    }
-  };
-
   const handleShareInvitation = async () => {
     const shareData = {
-      title: `${config.brideName} & ${config.groomName} | Sacred Mangalam Wedding Invitation`,
-      text: `With love and the blessings of our families, we invite you to celebrate the wedding of ${config.brideName} & ${config.groomName} on ${config.weddingDate} at ${config.venueName}.`,
+      title: `${config.brideName} Weds ${config.groomName} | Wedding Invitation`,
+      text: `With love and the blessings of our families, we invite you to celebrate the wedding of ${config.brideName} & ${config.groomName} on ${config.weddingDate} at ${config.venueName}, ${config.city}.`,
       url: window.location.href,
     };
 
@@ -116,16 +104,16 @@ export default function App() {
       {/* 1. SACRED MANGALAM CONTINUOUS SCROLL-SCRUBBED WEDDING FILM */}
       <SacredMangalamFilm
         config={config}
+        language={language}
+        onLanguageChange={setLanguage}
         isLocked={isGateLocked}
         onUnlock={handleUnlockGate}
         isMusicPlaying={isMusicPlaying}
         onToggleMusic={handleToggleMusic}
-        isUsingPlaceholders={isUsingPlaceholders}
-        onTogglePlaceholders={handleTogglePlaceholders}
         onOpenCustomizer={() => setIsCustomizerOpen(true)}
       />
 
-      {/* 2. EXTENDED ROYAL KEEPSAKE CONCIERGE BELOW THE FILM (Countdown, Printable Card, Gallery & WhatsApp RSVP) */}
+      {/* 2. EXTENDED ROYAL KEEPSAKE CONCIERGE BELOW THE FILM (Countdown, Printable Card, 3-Day Itinerary, Gallery & WhatsApp RSVP) */}
       {!isGateLocked && (
         <div id="details-concierge" className="relative z-20 bg-[#2A0812]">
           <WeddingCountdown config={config} language={language} />
@@ -161,14 +149,8 @@ export default function App() {
         config={config}
         onClose={() => setIsCustomizerOpen(false)}
         onUpdateConfig={setConfig}
-        onResetToPlaceholders={() => {
-          setConfig(DEFAULT_WEDDING_CONFIG);
-          setIsUsingPlaceholders(true);
-        }}
-        onLoadSacredMangalamDemo={() => {
-          setConfig(SACRED_MANGALAM_DEMO_CONFIG);
-          setIsUsingPlaceholders(false);
-        }}
+        onResetToPlaceholders={() => setConfig(MAMPI_DURGESH_WEDDING_CONFIG)}
+        onLoadSacredMangalamDemo={() => setConfig(MAMPI_DURGESH_WEDDING_CONFIG)}
       />
     </div>
   );

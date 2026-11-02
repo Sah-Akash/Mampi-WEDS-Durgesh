@@ -131,10 +131,12 @@ export const RoyalRsvpAndFooter: React.FC<RoyalRsvpAndFooterProps> = ({
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#C6A15B]/30">
                 <div>
                   <span className="text-xs tracking-[0.2em] uppercase text-[#C6A15B] block">
-                    Direct Family RSVP Contact
+                    Direct Family RSVP &amp; Blessings
                   </span>
                   <p className="font-display text-2xl sm:text-3xl text-[#F8F0E3] font-semibold mt-1">
-                    WhatsApp / Phone: {config.rsvpPhone}
+                    {config.rsvpPhone
+                      ? `WhatsApp / Phone: ${config.rsvpPhone}`
+                      : `${config.brideName} Weds ${config.groomName} · ${config.city}`}
                   </p>
                 </div>
 

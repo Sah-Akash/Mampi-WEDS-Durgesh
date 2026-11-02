@@ -74,7 +74,13 @@ export const WeddingEventsTimeline: React.FC<WeddingEventsTimelineProps> = ({
               aria-hidden="true"
             />
 
-            <div className="grid grid-cols-5 gap-4 relative z-10">
+            <div
+              className={`grid ${
+                enabledEvents.length === 3
+                  ? 'grid-cols-3 max-w-4xl mx-auto'
+                  : 'grid-cols-5'
+              } gap-4 relative z-10`}
+            >
               {enabledEvents.map((ev, index) => {
                 const isActive = ev.id === activeEventId;
                 return (

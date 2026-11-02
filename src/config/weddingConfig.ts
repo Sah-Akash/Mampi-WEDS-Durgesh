@@ -45,20 +45,23 @@ export interface WeddingConfig {
   brideMotherName: string;
   groomFatherName: string;
   groomMotherName: string;
-  // Haldi Hold Scene
+  // Hold Scene 2 (Day 1 - 22.11.2026: Mehendi)
   haldiName: string;
+  haldiNameHindi?: string;
   haldiDate: string;
   haldiTime: string;
   haldiVenue: string;
   haldiMapUrl: string;
-  // Reception Hold Scene
+  // Hold Scene 3 (Day 2 - 23.11.2026: Satyanarayan Pujan, Matkor, Ghee Dhari & Haldi)
   receptionName: string;
+  receptionNameHindi?: string;
   receptionDate: string;
   receptionTime: string;
   receptionVenue: string;
   receptionMapUrl: string;
-  // Wedding Hold Scene
+  // Hold Scene 4 (Day 3 - 24.11.2026: Wedding at Jay Maa Tara Anusthan Bhawan)
   weddingName: string;
+  weddingNameHindi?: string;
   weddingDate: string;
   weddingTime: string;
   venueName: string;
@@ -85,108 +88,130 @@ export interface WeddingConfig {
 }
 
 /**
- * SACRED MANGALAM TEMPLATE DEFAULT CONFIGURATION (Matching akhyankriti.com/invites/sacred-mangalam-template)
- * Switchable in 1 click to strict [BRIDE NAME] / [GROOM NAME] placeholders in the top bar or editor.
+ * MAMPI WEDS DURGESH — OFFICIAL WEDDING CONFIGURATION
+ * Dates: 22.11.2026 – 24.11.2026 · Rampurhat, Birbhum
  */
-export const SACRED_MANGALAM_DEMO_CONFIG: WeddingConfig = {
-  guestName: 'Guest',
-  brideName: 'Ananya',
-  brideNameHindi: 'अनन्या',
-  groomName: 'Rohan',
-  groomNameHindi: 'रोहन',
-  brideFatherName: 'Mr. Rajesh Iyer',
-  brideMotherName: 'Mrs. Lakshmi Iyer',
-  groomFatherName: 'Mr. Suresh Menon',
-  groomMotherName: 'Mrs. Priya Menon',
-  haldiName: 'Haldi',
-  haldiDate: '10 December 2027',
-  haldiTime: '10:00 AM onwards',
-  haldiVenue: 'Self Residence',
-  haldiMapUrl: 'https://www.google.com/maps/search/?api=1&query=Chennai',
-  receptionName: 'Reception',
-  receptionDate: '11 December 2027',
-  receptionTime: '7:00 PM onwards',
-  receptionVenue: 'Taj Hotel',
-  receptionMapUrl: 'https://www.google.com/maps/search/?api=1&query=Taj+Hotel+Chennai',
-  weddingName: 'Wedding',
-  weddingDate: '12 December 2027',
-  weddingTime: '9:30 AM (Muhurtham)',
-  venueName: 'Sri Kapaleeshwarar Temple',
-  fullAddress: 'Mylapore, Chennai',
-  city: 'Chennai',
-  googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Sri+Kapaleeshwarar+Temple',
-  countdownTargetISO: '2027-12-12T09:30:00+05:30',
+export const MAMPI_DURGESH_WEDDING_CONFIG: WeddingConfig = {
+  guestName: 'Family & Friends',
+  brideName: 'Mampi',
+  brideNameHindi: 'माम्पी',
+  groomName: 'Durgesh',
+  groomNameHindi: 'दुर्गेश',
+  brideFatherName: 'Lt. Saroj Kumar Sah',
+  brideMotherName: 'Smt. Poonam Saw',
+  groomFatherName: 'Lt. Vishwanath Keshri',
+  groomMotherName: 'Lt. Shobha Devi',
+
+  // Scene 2 (22.11.2026 — Mehendi)
+  haldiName: 'Mehendi',
+  haldiNameHindi: 'मेहंदी रस्म',
+  haldiDate: '22.11.2026 (Sunday)',
+  haldiTime: 'Auspicious Timing Onwards',
+  haldiVenue: 'Own House, Rampurhat',
+  haldiMapUrl: 'https://www.google.com/maps/search/?api=1&query=Sanghata+Para+Rampurhat+Birbhum',
+
+  // Scene 3 (23.11.2026 — Satyanarayan Pujan, Matkor, Ghee Dhari & Haldi)
+  receptionName: 'Satyanarayan Pujan, Matkor, Ghee Dhari & Haldi',
+  receptionNameHindi: 'सत्यनारायण पूजन, मटकोर, घी ढारी एवं हल्दी',
+  receptionDate: '23.11.2026 (Monday)',
+  receptionTime: 'Morning & Evening Auspicious Rituals',
+  receptionVenue: 'Own House, Rampurhat',
+  receptionMapUrl: 'https://www.google.com/maps/search/?api=1&query=Sanghata+Para+Rampurhat+Birbhum',
+
+  // Scene 4 (24.11.2026 — Shubh Vivah / Wedding)
+  weddingName: 'Shubh Vivah (Wedding)',
+  weddingNameHindi: 'शुभ विवाह उत्सव',
+  weddingDate: '24.11.2026 (Tuesday)',
+  weddingTime: '7:00 PM Onwards',
+  venueName: 'Jay Maa Tara Anusthan Bhawan',
+  fullAddress: 'Sanghata Para, Rampurhat, Birbhum',
+  city: 'Rampurhat',
+  googleMapsUrl: 'https://maps.app.goo.gl/Fa4ui3bYUYRTfd4BA',
+
+  // Live IST Countdown to 24 Nov 2026 at 7:00 PM IST
+  countdownTargetISO: '2026-11-24T19:00:00+05:30',
   venueTimezone: 'Asia/Kolkata',
   venueTimezoneLabel: 'IST (UTC+05:30)',
-  rsvpPhone: '+91 98765 43210',
-  websiteTitle: 'Ananya Weds Rohan',
-  hashtag: '#AnanyaRohanMangalam',
+  rsvpPhone: '',
+  websiteTitle: 'Mampi Weds Durgesh',
+  hashtag: '#MampiDurgeshKiShaadi',
   preferredLanguage: 'bilingual',
-  sanskritInvocation: '|| श्री गणेशाय नमः ||',
+  sanskritInvocation: '|| श्री गणेशाय नमः || · || जय माँ तारा ||',
   sanskritMeaning: 'मंगलम् भगवान विष्णुः, मंगलम् गरुड़ध्वजः। मंगलम् पुण्डरीकाक्षः, मंगलाय तनो हरिः॥',
   familyInvitationWording:
-    'With immense joy and the blessings of our beloved elders, we invite you to join us as our families come together to celebrate a beautiful new beginning.\n\nYour presence, love and blessings will make this occasion even more special.',
+    'With the divine grace of Maa Tara, the heavenly blessings of Late Shri Saroj Kumar Sah, Late Shri Vishwanath Keshri & Late Smt. Shobha Devi, and the warm love of Smt. Poonam Saw, we cordially invite you and your family to celebrate the sacred union of Mampi and Durgesh.\n\nYour gracious presence and heartfelt blessings will make these auspicious moments truly unforgettable.',
   familyInvitationWordingHindi:
-    'हमारे पूजनीय बुजुर्गों के आशीर्वाद और असीम हर्ष के साथ, हम आपको हमारे परिवारों के इस पावन मिलन और एक सुंदर नई शुरुआत के उत्सव में शामिल होने के लिए सादर आमंत्रित करते हैं।',
-  optionalFamilyMessage: 'We would be honoured by your presence and blessings.',
-  optionalFamilyMessageHindi: 'आपकी गरिमामयी उपस्थिति और आशीर्वाद की प्रतीक्षा में।',
-  monogramInitials: 'A & R',
+    'माँ तारा की असीम कृपा, स्वर्गीय श्री सरोज कुमार साह, स्वर्गीय श्री विश्वनाथ केसरी एवं स्वर्गीय श्रीमती शोभा देवी के दिव्य आशीर्वाद तथा श्रीमती पूनम साव के स्नेहिल आमंत्रण के साथ, हम आपको माम्पी और दुर्गेश के पावन परिणय उत्सव में सपरिवार पधारने हेतु सादर आमंत्रित करते हैं।\n\nआपकी गरिमामयी उपस्थिति और शुभाशीष इस शुभ अवसर को और भी पावन बना देंगे।',
+  optionalFamilyMessage:
+    'Your presence and blessings are our greatest treasure as Mampi and Durgesh step into their new life together.',
+  optionalFamilyMessageHindi:
+    'आपका स्नेह और आशीर्वाद ही हमारे परिवार के लिए सबसे बड़ा उपहार है।',
+  monogramInitials: 'M & D',
   events: [
     {
-      id: 'haldi',
+      id: 'mehendi',
       enabled: true,
-      name: 'HALDI',
-      nameHindi: 'हल्दी उत्सव',
-      subtitle: 'Golden Blessings & Marigold Courtyards',
-      subtitleHindi: 'पीले फूलों और खुशियों की फुहार',
-      date: '10 December 2027',
-      startTime: '10:00 AM onwards',
-      venueName: 'Self Residence',
-      fullAddress: 'Chennai',
-      dressCode: 'Sunlit Yellow, Marigold & Ivory',
-      dressCodeHindi: 'पीला और केसरिया परिधान',
-      description: 'A joyful celebration filled with sunshine, turmeric, marigolds and family laughter.',
-      descriptionHindi: 'हल्दी की शुभ्रता, गेंदे के फूलों और परिवार की हँसी-खुशी से भरा एक आनंदमय उत्सव।',
-      googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Chennai',
+      name: 'MEHENDI CEREMONY',
+      nameHindi: 'मेहंदी उत्सव',
+      subtitle: 'Henna Artistry, Folk Songs & Family Joy',
+      subtitleHindi: 'रचती मेहंदी, लोकगीत और अपनों की खुशियाँ',
+      date: '22.11.2026 (Sunday)',
+      startTime: 'Daytime & Evening Festivities',
+      endTime: 'Onwards',
+      venueName: 'Own House (Sah Residence)',
+      fullAddress: 'Rampurhat, Birbhum',
+      dressCode: 'Shades of Emerald Green, Henna Olive & Festive Pastels',
+      dressCodeHindi: 'हरा एवं पारंपरिक उत्सव परिधान',
+      description:
+        'An intimate celebration of intricate bridal mehendi, laughter, and cherished family traditions at our residence.',
+      descriptionHindi:
+        'निज निवास पर हाथों में रचती सुहाग की मेहंदी, मंगल गीतों और पारिवारिक हँसी-खुशी से सजा उत्सव।',
+      googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Sanghata+Para+Rampurhat+Birbhum',
+      accentHex: '#24392D',
+      illustrationType: 'mehendi',
+    },
+    {
+      id: 'haldi-pujan',
+      enabled: true,
+      name: 'SATYANARAYAN PUJAN, MATKOR, GHEE DHARI & HALDI',
+      nameHindi: 'सत्यनारायण पूजन, मटकोर, घी ढारी एवं हल्दी',
+      subtitle: 'Sacred Vedic Pujan, Traditional Matkor & Golden Haldi Blessings',
+      subtitleHindi: 'पावन पूजन, पारंपरिक मटकोर, घी ढारी एवं हल्दी की रस्म',
+      date: '23.11.2026 (Monday)',
+      startTime: 'Morning Pujan & Auspicious Haldi Rituals',
+      endTime: 'Onwards',
+      venueName: 'Own House (Sah Residence)',
+      fullAddress: 'Rampurhat, Birbhum',
+      dressCode: 'Auspicious Marigold Yellow, Saffron, Ochre & Red',
+      dressCodeHindi: 'पीला, केसरिया और पारंपरिक परिधान',
+      description:
+        'A deeply sacred day beginning with Shri Satyanarayan Katha & Pujan, followed by traditional Matkor, Ghee Dhari rituals, and the joyous Haldi ceremony.',
+      descriptionHindi:
+        'श्री सत्यनारायण कथा एवं पूजन से प्रारंभ होकर पारंपरिक मटकोर, घी ढारी और हल्दी की मंगलमय रस्मों का पावन दिवस।',
+      googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Sanghata+Para+Rampurhat+Birbhum',
       accentHex: '#D49B35',
       illustrationType: 'haldi',
     },
     {
-      id: 'reception',
-      enabled: true,
-      name: 'RECEPTION',
-      nameHindi: 'प्रीतिभोज (रिसेप्शन)',
-      subtitle: 'An Evening of Music, Lights & Blessings',
-      subtitleHindi: 'नवदंपति का स्वागत एवं शाही रात्रिभोज',
-      date: '11 December 2027',
-      startTime: '7:00 PM onwards',
-      venueName: 'Taj Hotel',
-      fullAddress: 'Chennai',
-      dressCode: 'Royal Silk, Velvet & Formal Evening Attire',
-      dressCodeHindi: 'शाही औपचारिक परिधान',
-      description: 'An evening to celebrate with family, friends, music and joyous festivities.',
-      descriptionHindi: 'परिवार और मित्रों के साथ उत्सव की एक गरिमामयी शाम।',
-      googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Taj+Hotel+Chennai',
-      accentHex: '#C6A15B',
-      illustrationType: 'reception',
-    },
-    {
       id: 'wedding',
       enabled: true,
-      name: 'WEDDING MUHURTHAM',
-      nameHindi: 'शुभ विवाह मुहूर्त',
-      subtitle: 'Sacred Mangalam Rituals & Temple Blessings',
-      subtitleHindi: 'पवित्र वैदिक रीति-रिवाज एवं मांगल्य धारणम्',
-      date: '12 December 2027',
-      startTime: '9:30 AM (Muhurtham)',
-      venueName: 'Sri Kapaleeshwarar Temple',
-      fullAddress: 'Mylapore, Chennai',
-      dressCode: 'Traditional Kanjeevaram Silk & Veshti / Royal Heritage Attire',
-      dressCodeHindi: 'पारंपरिक भारतीय रेशमी परिधान',
-      description: 'The sacred rituals, the blessings of our families and the beginning of a new chapter.',
-      descriptionHindi: 'पवित्र वैदिक रीति-रिवाज, बुजुर्गों का आशीर्वाद और नए अध्याय का शुभारंभ।',
-      googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Sri+Kapaleeshwarar+Temple',
-      accentHex: '#B87978',
+      name: 'SHUBH VIVAH (WEDDING CEREMONY)',
+      nameHindi: 'शुभ विवाह समारोह',
+      subtitle: 'Baraat Swagat, Jaimala, Sacred Pheras & Ashirwad',
+      subtitleHindi: 'बारात स्वागत, शुभ वरमाला, सप्तपदी एवं आशीर्वाद',
+      date: '24.11.2026 (Tuesday)',
+      startTime: '7:00 PM Onwards',
+      endTime: 'Auspicious Lagna Muhurat',
+      venueName: 'Jay Maa Tara Anusthan Bhawan',
+      fullAddress: 'Sanghata Para, Rampurhat, Birbhum',
+      dressCode: 'Traditional Royal Indian Wedding Attire (Crimson, Gold & Silk)',
+      dressCodeHindi: 'पारंपरिक भारतीय शाही परिधान',
+      description:
+        'The grand wedding celebration uniting Mampi and Durgesh under the sacred mandap with the blessings of Maa Tara and both families.',
+      descriptionHindi:
+        'जय माँ तारा अनुष्ठान भवन में बारात स्वागत, वरमाला एवं पवित्र वैदिक मंत्रोच्चार के साथ माम्पी और दुर्गेश का शुभ विवाह संस्कार।',
+      googleMapsUrl: 'https://maps.app.goo.gl/Fa4ui3bYUYRTfd4BA',
+      accentHex: '#C6A15B',
       illustrationType: 'wedding',
     },
   ],
@@ -195,8 +220,8 @@ export const SACRED_MANGALAM_DEMO_CONFIG: WeddingConfig = {
       id: 'plate-1',
       title: 'Sacred Temple Gopuram & Lotus Pond',
       titleHindi: 'पवित्र मंदिर गोपुरम और कमल सरोवर',
-      caption: 'Opening frame from the Sacred Mangalam wedding film.',
-      captionHindi: 'पवित्र मंगलम् विवाह फिल्म का प्रथम दृश्य।',
+      caption: 'Mampi Weds Durgesh — Auspicious Opening Scene (24.11.2026).',
+      captionHindi: 'माम्पी संग दुर्गेश — पावन विवाह उत्सव का प्रथम दृश्य।',
       category: 'Opening Mangalam Scene',
       aspectRatio: 'feature',
       illustrationType: 'courtyard',
@@ -205,11 +230,11 @@ export const SACRED_MANGALAM_DEMO_CONFIG: WeddingConfig = {
     },
     {
       id: 'plate-2',
-      title: 'The Royal Family Invitation Courtyard',
-      titleHindi: 'शाही पारिवारिक निमंत्रण प्रांगण',
-      caption: 'Scene II — Cordial invitation with parental blessings.',
-      captionHindi: 'दृश्य II — माता-पिता के आशीर्वाद सहित स्नेहिल आमंत्रण।',
-      category: 'Invitation Hold Scene',
+      title: 'Nimantran Courtyard — Sah & Keshri Families',
+      titleHindi: 'साह एवं केसरी परिवार का स्नेहिल आमंत्रण',
+      caption: 'Cordial family invitation honoring our beloved elders.',
+      captionHindi: 'हमारे पूजनीय पूर्वजों के आशीर्वाद सहित सादर आमंत्रण।',
+      category: 'Family Invitation Scene',
       aspectRatio: 'portrait',
       illustrationType: 'jharokha',
       isPlaceholderIllustration: false,
@@ -217,11 +242,11 @@ export const SACRED_MANGALAM_DEMO_CONFIG: WeddingConfig = {
     },
     {
       id: 'plate-3',
-      title: 'Sunlit Haldi Marigold Celebration',
-      titleHindi: 'हल्दी उत्सव का सुनहरा प्रांगण',
-      caption: 'Scene III — Vibrant marigold and turmeric festivities.',
-      captionHindi: 'दृश्य III — हल्दी और गेंदे के फूलों का उत्सव।',
-      category: 'Haldi Hold Scene',
+      title: 'Mehendi & Haldi Celebrations (22–23 Nov 2026)',
+      titleHindi: 'मेहंदी, सत्यनारायण पूजन, मटकोर एवं हल्दी (22–23 नवंबर)',
+      caption: 'Sacred home rituals filled with marigolds, henna, and devotion.',
+      captionHindi: 'निज निवास पर मेहंदी, पूजन, मटकोर, घी ढारी और हल्दी की रस्में।',
+      category: 'Pre-Wedding Rituals',
       aspectRatio: 'portrait',
       illustrationType: 'archway',
       isPlaceholderIllustration: false,
@@ -229,11 +254,11 @@ export const SACRED_MANGALAM_DEMO_CONFIG: WeddingConfig = {
     },
     {
       id: 'plate-4',
-      title: 'Grand Evening Reception Stage',
-      titleHindi: 'भव्य रिसेप्शन संध्या मंच',
-      caption: 'Scene IV — Illuminated evening reception under chandeliers.',
-      captionHindi: 'दृश्य IV — दीपों और झूमरों से सजी स्वागत संध्या।',
-      category: 'Reception Hold Scene',
+      title: 'Festive Evening Gathering',
+      titleHindi: 'मंगल संध्या एवं परिवार मिलन',
+      caption: 'Celebrating the union of two families in Rampurhat.',
+      captionHindi: 'रामपुरहाट में दोनों परिवारों के मिलन की मधुर संध्या।',
+      category: 'Celebration Scene',
       aspectRatio: 'landscape',
       illustrationType: 'sheeshmahal',
       isPlaceholderIllustration: false,
@@ -241,11 +266,11 @@ export const SACRED_MANGALAM_DEMO_CONFIG: WeddingConfig = {
     },
     {
       id: 'plate-5',
-      title: 'Sacred Wedding Muhurtham Mandapam',
-      titleHindi: 'पवित्र विवाह मुहूर्त मंडपम',
-      caption: 'Scene V — The sacred temple mandapam ceremony.',
-      captionHindi: 'दृश्य V — पवित्र मंदिर मंडप में शुभ विवाह संस्कार।',
-      category: 'Wedding Muhurtham Scene',
+      title: 'Shubh Vivah at Jay Maa Tara Anusthan Bhawan',
+      titleHindi: 'जय माँ तारा अनुष्ठान भवन में शुभ विवाह (24.11.2026)',
+      caption: 'Sanghata Para, Rampurhat, Birbhum · 7:00 PM Onwards.',
+      captionHindi: 'संघता पारा, रामपुरहाट, बीरभूम · सायं 7:00 बजे से।',
+      category: 'Wedding Mandap Scene',
       aspectRatio: 'landscape',
       illustrationType: 'mandap',
       isPlaceholderIllustration: false,
@@ -254,40 +279,5 @@ export const SACRED_MANGALAM_DEMO_CONFIG: WeddingConfig = {
   ],
 };
 
-/**
- * STRICT PLACEHOLDER CONFIGURATION (With [BRIDE NAME], [GROOM NAME], etc.)
- */
-export const DEFAULT_WEDDING_CONFIG: WeddingConfig = {
-  ...SACRED_MANGALAM_DEMO_CONFIG,
-  guestName: 'Guest',
-  brideName: '[BRIDE NAME]',
-  brideNameHindi: '[दुल्हन का नाम]',
-  groomName: '[GROOM NAME]',
-  groomNameHindi: '[दूल्हे का नाम]',
-  brideFatherName: "[FATHER'S NAME]",
-  brideMotherName: "[MOTHER'S NAME]",
-  groomFatherName: "[GROOM'S FATHER'S NAME]",
-  groomMotherName: "[GROOM'S MOTHER'S NAME]",
-  haldiName: 'Haldi',
-  haldiDate: '[WEDDING DATE]',
-  haldiTime: '[WEDDING TIME]',
-  haldiVenue: '[VENUE NAME]',
-  haldiMapUrl: '[GOOGLE MAPS URL]',
-  receptionName: 'Reception',
-  receptionDate: '[WEDDING DATE]',
-  receptionTime: '[WEDDING TIME]',
-  receptionVenue: '[VENUE NAME]',
-  receptionMapUrl: '[GOOGLE MAPS URL]',
-  weddingName: 'Wedding',
-  weddingDate: '[WEDDING DATE]',
-  weddingTime: '[WEDDING TIME]',
-  venueName: '[VENUE NAME]',
-  fullAddress: '[FULL ADDRESS]',
-  city: '[CITY]',
-  googleMapsUrl: '[GOOGLE MAPS URL]',
-  rsvpPhone: '[PHONE NUMBER]',
-  websiteTitle: '[BRIDE NAME] WEDS [GROOM NAME]',
-  hashtag: '[HASHTAG]',
-  optionalFamilyMessage: '[OPTIONAL FAMILY MESSAGE]',
-  monogramInitials: 'B & G',
-};
+export const SACRED_MANGALAM_DEMO_CONFIG: WeddingConfig = MAMPI_DURGESH_WEDDING_CONFIG;
+export const DEFAULT_WEDDING_CONFIG: WeddingConfig = MAMPI_DURGESH_WEDDING_CONFIG;
