@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Play, Pause } from 'lucide-react';
 import { LanguageMode, WeddingConfig } from '../config/weddingConfig';
 
 interface SacredMangalamFilmProps {
@@ -156,6 +156,7 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
   );
   const [isInitialReady, setIsInitialReady] = useState<boolean>(false);
+  const [isAutoScrolling, setIsAutoScrolling] = useState<boolean>(false);
 
   useEffect(() => {
     let resizeTimer = 0;
@@ -1053,6 +1054,122 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
     };
   }, [piecewise, maxFrameIdx, drawFrameToCanvas, applyProgressToDOM, syncCanvasAndScrollMetrics]);
 
+  // Pause auto-scrolling when user manually interacts (wheel, touch drag, scroll keys)
+  useEffect(() => {
+    if (!isAutoScrolling) return;
+
+    const handleUserInterrupt = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('[data-autoscroll-toggle="true"]')) {
+        return;
+      }
+      setIsAutoScrolling(false);
+    };
+
+    const handleKeyInterrupt = (e: KeyboardEvent) => {
+      if ([' ', 'ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End'].includes(e.key)) {
+        setIsAutoScrolling(false);
+      }
+    };
+
+    window.addEventListener('wheel', handleUserInterrupt, { passive: true });
+    window.addEventListener('touchmove', handleUserInterrupt, { passive: true });
+    window.addEventListener('keydown', handleKeyInterrupt, { passive: true });
+
+    return () => {
+      window.removeEventListener('wheel', handleUserInterrupt);
+      window.removeEventListener('touchmove', handleUserInterrupt);
+      window.removeEventListener('keydown', handleKeyInterrupt);
+    };
+  }, [isAutoScrolling]);
+
+  // Ultra-smooth auto-scroll animation loop
+  useEffect(() => {
+    if (isLocked || !isAutoScrolling) return;
+
+    let animId = 0;
+    let lastTime = performance.now();
+    let remainder = 0;
+
+    const autoScrollLoop = (now: number) => {
+      const dt = Math.min(64, Math.max(1, now - lastTime));
+      lastTime = now;
+
+      // Determine speed based on film position
+      const el = containerRef.current;
+      let inHold = false;
+      let inFilm = true;
+
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const totalFilmScroll = Math.max(1, el.offsetHeight - window.innerHeight);
+        const scrolledFilm = Math.max(0, -rect.top);
+        const progress = scrolledFilm / totalFilmScroll;
+
+        if (scrolledFilm >= totalFilmScroll) {
+          inFilm = false;
+        } else {
+          for (let i = 0; i < holdStacks.length; i++) {
+            const hold = piecewise.windows[holdStacks[i].id];
+            if (hold && progress >= hold.start && progress <= hold.end) {
+              inHold = true;
+              break;
+            }
+          }
+        }
+      }
+
+      // Speeds in px per second:
+      // In text hold scenes: ~88px/s (giving ~10-12s of easy reading for each event card)
+      // In transition frames: ~165px/s (majestic, cinematic camera glide)
+      // Below the film (details / itinerary / blessings): ~115px/s
+      const speedPxPerSec = inHold ? 88 : inFilm ? 165 : 115;
+      const step = (speedPxPerSec * dt) / 1000 + remainder;
+      const wholeStep = Math.floor(step);
+      remainder = step - wholeStep;
+
+      if (wholeStep > 0) {
+        window.scrollBy(0, wholeStep);
+      }
+
+      // Check if reached bottom of document
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (window.scrollY >= maxScroll - 8) {
+        setIsAutoScrolling(false);
+        return;
+      }
+
+      animId = window.requestAnimationFrame(autoScrollLoop);
+    };
+
+    animId = window.requestAnimationFrame(autoScrollLoop);
+    return () => {
+      if (animId) window.cancelAnimationFrame(animId);
+    };
+  }, [isLocked, isAutoScrolling, holdStacks, piecewise]);
+
+  const handleUnlockAndAutoScroll = () => {
+    onUnlock();
+    // Start auto-scrolling with a gentle delay so the palace doors reveal smoothly first
+    window.setTimeout(() => {
+      setIsAutoScrolling(true);
+    }, 600);
+  };
+
+  const toggleAutoScroll = () => {
+    setIsAutoScrolling((prev) => {
+      const next = !prev;
+      if (next) {
+        // If user is at or near the very bottom, restart from beginning
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        if (window.scrollY >= maxScroll - 40) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+      return next;
+    });
+  };
+
   const handleOpenMapUrl = (rawUrl?: string, fallbackVenue?: string) => {
     if (rawUrl && !rawUrl.includes('[') && rawUrl.startsWith('http')) {
       window.open(rawUrl, '_blank', 'noopener,noreferrer');
@@ -1250,7 +1367,7 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
 
               <button
                 type="button"
-                onClick={onUnlock}
+                onClick={handleUnlockAndAutoScroll}
                 data-rec="gate-open"
                 className="mb-[5vh] sm:mb-[6vh] cursor-pointer focus:outline-none"
                 aria-label="Tap to Open Mampi Weds Durgesh Wedding Invitation"
@@ -1301,29 +1418,63 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
         </div>
       </div>
 
-      {/* FLOATING CIRCULAR MUSIC TOGGLE BUTTON */}
-      <button
-        type="button"
-        onClick={onToggleMusic}
-        className="fixed bottom-5 left-5 z-[70] w-10 h-10 rounded-full bg-white/95 shadow-lg flex items-center justify-center transition-transform duration-200 active:scale-90 cursor-pointer"
-        aria-label={isMusicPlaying ? 'Pause music' : 'Play music'}
-      >
-        <svg
-          className="w-4 h-4"
-          fill="#5a4a33"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
+      {/* FLOATING ROYAL CONTROLS DOCK (MUSIC & AUTO-SCROLL) */}
+      <div className="fixed bottom-5 left-4 sm:left-6 z-[70] flex items-center gap-2.5 select-none">
+        {/* MUSIC TOGGLE BUTTON */}
+        <button
+          type="button"
+          onClick={onToggleMusic}
+          className="w-10 h-10 rounded-full bg-[#2A0812]/90 border border-[#C6A15B]/70 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex items-center justify-center transition-transform duration-200 active:scale-90 cursor-pointer hover:border-[#E7D6AD]"
+          aria-label={isMusicPlaying ? 'Pause music' : 'Play music'}
+          title={isMusicPlaying ? 'Mute Music' : 'Play Music'}
         >
-          <path d="M20.5 2.2a1 1 0 0 0-.83-.2l-11 2A1 1 0 0 0 8 5v9.4A3.6 3.6 0 0 0 6.5 14C4.57 14 3 15.35 3 17s1.57 3 3.5 3S10 18.65 10 17V7.34l9-1.64V12.4a3.6 3.6 0 0 0-1.5-.4c-1.93 0-3.5 1.35-3.5 3s1.57 3 3.5 3 3.5-1.35 3.5-3V3a1 1 0 0 0-.5-.8Z" />
-          {!isMusicPlaying && (
-            <path
-              d="M2.1 2.8 20.9 22.1 22.4 20.7 3.6 1.4z"
-              stroke="#5a4a33"
-              strokeWidth="0.5"
-            />
+          <svg
+            className="w-4 h-4"
+            fill="#E7D6AD"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path d="M20.5 2.2a1 1 0 0 0-.83-.2l-11 2A1 1 0 0 0 8 5v9.4A3.6 3.6 0 0 0 6.5 14C4.57 14 3 15.35 3 17s1.57 3 3.5 3S10 18.65 10 17V7.34l9-1.64V12.4a3.6 3.6 0 0 0-1.5-.4c-1.93 0-3.5 1.35-3.5 3s1.57 3 3.5 3 3.5-1.35 3.5-3V3a1 1 0 0 0-.5-.8Z" />
+            {!isMusicPlaying && (
+              <path
+                d="M2.1 2.8 20.9 22.1 22.4 20.7 3.6 1.4z"
+                stroke="#E7D6AD"
+                strokeWidth="1"
+              />
+            )}
+          </svg>
+        </button>
+
+        {/* AUTO-SCROLL TOGGLE PILL */}
+        <button
+          type="button"
+          data-autoscroll-toggle="true"
+          onClick={toggleAutoScroll}
+          className={`h-10 px-3.5 rounded-full backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex items-center gap-1.5 transition-all duration-300 active:scale-95 cursor-pointer border ${
+            isAutoScrolling
+              ? 'bg-[#C6A15B] text-[#2A0812] border-[#F8F0E3] shadow-[0_0_18px_rgba(198,161,91,0.6)] font-semibold'
+              : 'bg-[#2A0812]/90 text-[#E7D6AD] border-[#C6A15B]/70 hover:border-[#E7D6AD]'
+          }`}
+          aria-label={isAutoScrolling ? 'Pause Auto Scroll' : 'Start Auto Scroll'}
+          title={isAutoScrolling ? 'Pause Auto Scroll' : 'Start Auto Scroll'}
+        >
+          {isAutoScrolling ? (
+            <>
+              <Pause className="w-3.5 h-3.5 fill-current" />
+              <span className="text-[11px] tracking-wider uppercase font-sans">
+                Pause
+              </span>
+            </>
+          ) : (
+            <>
+              <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+              <span className="text-[11px] tracking-wider uppercase font-sans">
+                Auto Scroll
+              </span>
+            </>
           )}
-        </svg>
-      </button>
+        </button>
+      </div>
     </div>
   );
 };
