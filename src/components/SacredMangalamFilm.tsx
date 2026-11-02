@@ -1,16 +1,14 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { SlidersHorizontal, ChevronDown, Languages } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { LanguageMode, WeddingConfig } from '../config/weddingConfig';
 
 interface SacredMangalamFilmProps {
   config: WeddingConfig;
   language: LanguageMode;
-  onLanguageChange: (lang: LanguageMode) => void;
   isLocked: boolean;
   onUnlock: () => void;
   isMusicPlaying: boolean;
   onToggleMusic: () => void;
-  onOpenCustomizer: () => void;
 }
 
 interface TextLineItem {
@@ -62,9 +60,6 @@ const FONT_FAMILY_MAP: Record<TextLineItem['font'], string> = {
   devanagari: "'Tiro Devanagari Sanskrit', 'Cormorant Garamond', serif",
 };
 
-/**
- * Exact piecewise scroll-to-frame & hold window calculation (`Ae` from SacredMangalamTemplate)
- */
 function computeScrollHoldPiecewise(
   holds: { id: string; fs: number; fe: number }[],
   maxFrameIdx: number,
@@ -145,12 +140,10 @@ function interpolatePiecewise(value: number, domain: number[], range: number[]):
 export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
   config,
   language,
-  onLanguageChange,
   isLocked,
   onUnlock,
   isMusicPlaying,
   onToggleMusic,
-  onOpenCustomizer,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -202,7 +195,6 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
   const showEnglish = language === 'en' || language === 'bilingual';
   const showHindi = language === 'hi' || language === 'bilingual';
 
-  // Build the 5 Hold Stacks for Mampi Weds Durgesh
   const holdStacks: HoldStackConfig[] = useMemo(() => {
     const filterByLang = (items: TextLineItem[]) =>
       items.filter((item) => {
@@ -840,26 +832,6 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
     };
   }, [piecewise, maxFrameIdx, drawFrameToCanvas]);
 
-  const handleJumpToScene = (stackId: string | 'top') => {
-    if (isLocked) {
-      onUnlock();
-    }
-    const el = containerRef.current;
-    if (!el) return;
-
-    const totalScrollable = Math.max(1, el.offsetHeight - window.innerHeight);
-    if (stackId === 'top') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    const win = piecewise.windows[stackId];
-    if (!win) return;
-    const targetProgress = win.start + (win.end - win.start) * 0.45;
-    const targetScrollY = el.offsetTop + targetProgress * totalScrollable;
-    window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
-  };
-
   const handleOpenMapUrl = (rawUrl?: string, fallbackVenue?: string) => {
     if (rawUrl && !rawUrl.includes('[') && rawUrl.startsWith('http')) {
       window.open(rawUrl, '_blank', 'noopener,noreferrer');
@@ -877,87 +849,8 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
     );
   };
 
-  const cycleLanguage = () => {
-    const next: Record<LanguageMode, LanguageMode> = {
-      bilingual: 'en',
-      en: 'hi',
-      hi: 'bilingual',
-    };
-    onLanguageChange(next[language]);
-  };
-
   return (
     <div className="relative w-full select-none bg-[#241316] no-print">
-      {/* DISCREET TOP SCENE JUMP & BILINGUAL BAR */}
-      <div className="fixed top-3 inset-x-0 z-[70] px-3 sm:px-6 flex items-center justify-between gap-2 pointer-events-none">
-        {/* Scene Jump Links */}
-        <div className="pointer-events-auto flex items-center gap-1 p-1 rounded-full bg-black/55 backdrop-blur-md border border-white/20 overflow-x-auto max-w-[66vw] sm:max-w-none">
-          <button
-            type="button"
-            onClick={() => handleJumpToScene('top')}
-            className="px-2.5 py-1 rounded-full text-[11px] uppercase tracking-wider text-white/90 hover:bg-white/15 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-          >
-            Start
-          </button>
-          {holdStacks.map((s) => {
-            const win = piecewise.windows[s.id];
-            const isActive =
-              win && scrollProgress >= win.start - 0.02 && scrollProgress <= win.fadeEnd;
-            return (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => handleJumpToScene(s.id)}
-                className={`px-2.5 py-1 rounded-full text-[11px] uppercase tracking-wider transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  isActive
-                    ? 'bg-[#b8935a] text-white font-medium shadow-sm'
-                    : 'text-white/85 hover:bg-white/15'
-                }`}
-              >
-                {s.label}
-              </button>
-            );
-          })}
-          <a
-            href="#details-concierge"
-            onClick={() => {
-              if (isLocked) onUnlock();
-            }}
-            className="px-2.5 py-1 rounded-full text-[11px] uppercase tracking-wider text-[#E7D6AD] hover:bg-white/15 transition-colors whitespace-nowrap shrink-0"
-          >
-            Full Card &amp; Countdown ↓
-          </a>
-        </div>
-
-        {/* Right Controls: Language Switcher & Customize */}
-        <div className="pointer-events-auto flex items-center gap-1.5 shrink-0">
-          <button
-            type="button"
-            onClick={cycleLanguage}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-black/55 text-white/95 border border-white/25 backdrop-blur-md hover:bg-black/75 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-            title="Switch Language (Bilingual / English / Hindi)"
-          >
-            <Languages className="w-3 h-3 text-[#E7D6AD]" />
-            <span>
-              {language === 'bilingual'
-                ? 'EN + हिं'
-                : language === 'en'
-                ? 'English'
-                : 'हिन्दी'}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onOpenCustomizer}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-[#b8935a]/90 text-white border border-white/40 backdrop-blur-md hover:bg-[#b8935a] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-          >
-            <SlidersHorizontal className="w-3 h-3" />
-            <span className="hidden sm:inline">Edit Details</span>
-          </button>
-        </div>
-      </div>
-
       {/* BLURRED DESKTOP GUTTER BACKDROP */}
       <div
         className="fixed inset-0 z-0 overflow-hidden pointer-events-none"
@@ -989,7 +882,7 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
             />
 
             {loadedCount < 25 && (
-              <div className="absolute top-14 left-1/2 -translate-x-1/2 z-30 px-3.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-[11px] tracking-widest uppercase text-white/85 pointer-events-none">
+              <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 px-3.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-[11px] tracking-widest uppercase text-white/85 pointer-events-none">
                 Loading Mampi &amp; Durgesh’s Wedding Film…
               </div>
             )}
@@ -1142,10 +1035,9 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
 
             {/* OPENING "TAP TO OPEN" OVERLAY WITH COUPLE TITLE */}
             {isLocked && (
-              <div className="fixed inset-0 z-40 flex flex-col items-center justify-between py-14 px-4 pointer-events-auto">
-                {/* Top Auspicious Header on Opening Frame */}
+              <div className="fixed inset-0 z-40 flex flex-col items-center justify-between py-12 px-4 pointer-events-auto">
                 <div
-                  className="mt-6 text-center px-6 py-3 rounded-2xl bg-black/40 backdrop-blur-sm border border-white/15"
+                  className="mt-2 text-center px-6 py-3 rounded-2xl bg-black/40 backdrop-blur-sm border border-white/15"
                   style={{ textShadow: '0 2px 12px rgba(0,0,0,0.75)' }}
                 >
                   <p className="font-devanagari text-xs sm:text-sm text-[#E7D6AD] tracking-widest">

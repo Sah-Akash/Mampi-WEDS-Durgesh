@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, CalendarClock } from 'lucide-react';
 import { LanguageMode, WeddingConfig } from '../config/weddingConfig';
 import { ChapterDivider, GlowingDiya } from './RoyalOrnaments';
 
@@ -8,27 +7,18 @@ interface WeddingCountdownProps {
   language: LanguageMode;
 }
 
-type SimulationMode = 'configured' | 'celebration' | 'placeholder';
-
 interface TimeRemaining {
-  status: 'counting' | 'reached' | 'invalid';
+  status: 'counting' | 'reached';
   days: number;
   hours: number;
   minutes: number;
   seconds: number;
 }
 
-function calculateRemaining(targetISO: string, mode: SimulationMode): TimeRemaining {
-  if (mode === 'celebration') {
-    return { status: 'reached', days: 0, hours: 0, minutes: 0, seconds: 0 };
-  }
-  if (mode === 'placeholder' || !targetISO || targetISO.includes('[') || targetISO.trim() === '') {
-    return { status: 'invalid', days: 0, hours: 0, minutes: 0, seconds: 0 };
-  }
-
+function calculateRemaining(targetISO: string): TimeRemaining {
   const targetTime = Date.parse(targetISO);
   if (Number.isNaN(targetTime)) {
-    return { status: 'invalid', days: 0, hours: 0, minutes: 0, seconds: 0 };
+    return { status: 'reached', days: 0, hours: 0, minutes: 0, seconds: 0 };
   }
 
   const now = Date.now();
@@ -54,18 +44,17 @@ function calculateRemaining(targetISO: string, mode: SimulationMode): TimeRemain
 }
 
 export const WeddingCountdown: React.FC<WeddingCountdownProps> = ({ config, language }) => {
-  const [simMode, setSimMode] = useState<SimulationMode>('configured');
   const [remaining, setRemaining] = useState<TimeRemaining>(() =>
-    calculateRemaining(config.countdownTargetISO, 'configured')
+    calculateRemaining(config.countdownTargetISO)
   );
 
   useEffect(() => {
-    setRemaining(calculateRemaining(config.countdownTargetISO, simMode));
+    setRemaining(calculateRemaining(config.countdownTargetISO));
     const timer = window.setInterval(() => {
-      setRemaining(calculateRemaining(config.countdownTargetISO, simMode));
+      setRemaining(calculateRemaining(config.countdownTargetISO));
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [config.countdownTargetISO, simMode]);
+  }, [config.countdownTargetISO]);
 
   const pad = (val: number) => String(Math.max(0, Math.floor(val))).padStart(2, '0');
   const showHindi = language === 'hi' || language === 'bilingual';
@@ -77,7 +66,7 @@ export const WeddingCountdown: React.FC<WeddingCountdownProps> = ({ config, lang
     >
       <div className="max-w-5xl mx-auto text-center">
         <p className="text-xs tracking-[0.25em] uppercase text-[#C6A15B] mb-2">
-          Chapter II · Shubh Muhurat
+          Shubh Muhurat · शुभ मुहूर्त
         </p>
         <h2 className="font-display text-3xl sm:text-5xl text-[#F8F0E3] font-semibold tracking-wide">
           Counting the Moments to Forever
@@ -88,22 +77,19 @@ export const WeddingCountdown: React.FC<WeddingCountdownProps> = ({ config, lang
           </p>
         )}
 
-        {/* Venue Timezone & Configured Date Kicker (Unboxed Metadata with · separators) */}
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm text-[#E7D6AD]/80">
           <span>{config.weddingDate}</span>
           <span aria-hidden="true">·</span>
           <span>{config.weddingTime}</span>
           <span aria-hidden="true">·</span>
-          <span>Timezone: {config.venueTimezoneLabel}</span>
-          <span aria-hidden="true">·</span>
-          <span>{config.city}</span>
+          <span>{config.venueName}, {config.city}</span>
         </div>
 
         {/* Main Countdown Display Surface */}
         <div className="mt-10 relative p-6 sm:p-12 bg-[#2A0812]/90 border border-[#C6A15B]/50 shadow-[0_20px_60px_rgba(0,0,0,0.55)]">
           <div className="absolute inset-2 border border-[#C6A15B]/20 pointer-events-none" />
 
-          {remaining.status === 'counting' && (
+          {remaining.status === 'counting' ? (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-0 items-center">
               {[
                 {
@@ -150,9 +136,7 @@ export const WeddingCountdown: React.FC<WeddingCountdownProps> = ({ config, lang
                 </div>
               ))}
             </div>
-          )}
-
-          {remaining.status === 'reached' && (
+          ) : (
             <div className="py-6 px-4 flex flex-col items-center text-center">
               <GlowingDiya size="md" className="mb-3" />
               <p className="text-xs tracking-[0.25em] uppercase text-[#C6A15B] mb-2">
@@ -166,54 +150,8 @@ export const WeddingCountdown: React.FC<WeddingCountdownProps> = ({ config, lang
                   शुभ घड़ी आ गई है! {config.brideNameHindi} और {config.groomNameHindi} के पावन परिणय उत्सव में आपका स्वागत है।
                 </p>
               )}
-              <p className="mt-3 text-sm text-[#F8F0E3]/80 max-w-xl">
-                With glowing diyas, sacred chants, and the blessings of both families, the royal celebration is underway in {config.city}.
-              </p>
             </div>
           )}
-
-          {remaining.status === 'invalid' && (
-            <div className="py-6 px-4 flex flex-col items-center text-center">
-              <CalendarClock className="w-8 h-8 text-[#C6A15B] mb-3" />
-              <p className="text-xs tracking-[0.22em] uppercase text-[#C6A15B] mb-1">
-                Auspicious Muhurat Announcement
-              </p>
-              <h3 className="font-display text-2xl sm:text-4xl text-[#E7D6AD] font-semibold">
-                {config.weddingDate} · {config.weddingTime}
-              </h3>
-              <p className="mt-2 text-sm text-[#F8F0E3]/80 max-w-lg">
-                The exact ISO date and muhurat time in <code className="text-[#E7D6AD]">weddingConfig.ts</code> is currently set to placeholder mode. Update <code className="text-[#E7D6AD]">countdownTargetISO</code> to activate the live second-by-second countdown.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Interactive State Verification Switcher (Allows testing Live Countdown vs Zero Reached vs Placeholder gracefully) */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-xs">
-          <span className="text-[#E7D6AD]/70 flex items-center gap-1 mr-1">
-            <Sparkles className="w-3.5 h-3.5 text-[#C6A15B]" />
-            <span>Preview Countdown State:</span>
-          </span>
-          {(
-            [
-              { id: 'configured', label: 'Live IST Countdown' },
-              { id: 'celebration', label: 'Wedding Day Reached (00:00:00)' },
-              { id: 'placeholder', label: 'Unset Date Fallback' },
-            ] as { id: SimulationMode; label: string }[]
-          ).map((btn) => (
-            <button
-              key={btn.id}
-              type="button"
-              onClick={() => setSimMode(btn.id)}
-              className={`px-3 py-1.5 border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                simMode === btn.id
-                  ? 'bg-[#C6A15B] text-[#2A0812] border-[#E7D6AD] font-semibold'
-                  : 'bg-[#2A0812]/80 text-[#E7D6AD]/80 border-[#C6A15B]/35 hover:border-[#E7D6AD]'
-              }`}
-            >
-              {btn.label}
-            </button>
-          ))}
         </div>
 
         <ChapterDivider className="mt-12" />

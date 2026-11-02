@@ -4,36 +4,26 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  MAMPI_DURGESH_WEDDING_CONFIG,
-  LanguageMode,
-  WeddingConfig,
-} from './config/weddingConfig';
+import { MAMPI_DURGESH_WEDDING_CONFIG } from './config/weddingConfig';
 import { SacredMangalamFilm } from './components/SacredMangalamFilm';
 import { FamilyInvitationSection } from './components/FamilyInvitationSection';
 import { WeddingCountdown } from './components/WeddingCountdown';
 import { WeddingEventsTimeline } from './components/WeddingEventsTimeline';
-import { CinematicGallery } from './components/CinematicGallery';
 import { RoyalRsvpAndFooter } from './components/RoyalRsvpAndFooter';
-import { PlaceholderCustomizerModal } from './components/PlaceholderCustomizerModal';
 import { royalAudio } from './utils/royalAudio';
 
 export default function App() {
-  const [config, setConfig] = useState<WeddingConfig>(MAMPI_DURGESH_WEDDING_CONFIG);
+  const config = MAMPI_DURGESH_WEDDING_CONFIG;
+  const language = config.preferredLanguage;
+
   const [isGateLocked, setIsGateLocked] = useState<boolean>(true);
-  const [language, setLanguage] = useState<LanguageMode>(
-    MAMPI_DURGESH_WEDDING_CONFIG.preferredLanguage
-  );
   const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(false);
-  const [isCustomizerOpen, setIsCustomizerOpen] = useState<boolean>(false);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
 
-  // Sync document title
   useEffect(() => {
     document.title = `${config.brideName} Weds ${config.groomName} | 24.11.2026 · ${config.city}`;
   }, [config.brideName, config.groomName, config.city]);
 
-  // Stop audio on unmount
   useEffect(() => {
     return () => {
       royalAudio.stopAmbientMusic();
@@ -81,39 +71,19 @@ export default function App() {
     window.print();
   };
 
-  const handleUpdateGalleryPhoto = (
-    plateId: string,
-    photoDataUrl: string | undefined
-  ) => {
-    setConfig((prev) => ({
-      ...prev,
-      gallery: prev.gallery.map((item) =>
-        item.id === plateId
-          ? {
-              ...item,
-              photoUrl: photoDataUrl,
-              isPlaceholderIllustration: !photoDataUrl,
-            }
-          : item
-      ),
-    }));
-  };
-
   return (
     <div className="min-h-screen bg-[#241316] text-[#F8F0E3] relative">
       {/* 1. SACRED MANGALAM CONTINUOUS SCROLL-SCRUBBED WEDDING FILM */}
       <SacredMangalamFilm
         config={config}
         language={language}
-        onLanguageChange={setLanguage}
         isLocked={isGateLocked}
         onUnlock={handleUnlockGate}
         isMusicPlaying={isMusicPlaying}
         onToggleMusic={handleToggleMusic}
-        onOpenCustomizer={() => setIsCustomizerOpen(true)}
       />
 
-      {/* 2. EXTENDED ROYAL KEEPSAKE CONCIERGE BELOW THE FILM (Countdown, Printable Card, 3-Day Itinerary, Gallery & WhatsApp RSVP) */}
+      {/* 2. FIXED ROYAL KEEPSAKE SECTIONS BELOW THE FILM (Countdown, Family Card, 3-Day Itinerary & RSVP) */}
       {!isGateLocked && (
         <div id="details-concierge" className="relative z-20 bg-[#2A0812]">
           <WeddingCountdown config={config} language={language} />
@@ -126,32 +96,15 @@ export default function App() {
 
           <WeddingEventsTimeline config={config} language={language} />
 
-          <CinematicGallery
-            config={config}
-            language={language}
-            onUpdateGalleryPhoto={handleUpdateGalleryPhoto}
-          />
-
           <RoyalRsvpAndFooter
             config={config}
             language={language}
             onShareInvitation={handleShareInvitation}
             onPrintInvitation={handlePrintInvitation}
-            onOpenCustomizer={() => setIsCustomizerOpen(true)}
             shareFeedback={shareFeedback}
           />
         </div>
       )}
-
-      {/* 3. CUSTOMIZER MODAL */}
-      <PlaceholderCustomizerModal
-        isOpen={isCustomizerOpen}
-        config={config}
-        onClose={() => setIsCustomizerOpen(false)}
-        onUpdateConfig={setConfig}
-        onResetToPlaceholders={() => setConfig(MAMPI_DURGESH_WEDDING_CONFIG)}
-        onLoadSacredMangalamDemo={() => setConfig(MAMPI_DURGESH_WEDDING_CONFIG)}
-      />
     </div>
   );
 }
