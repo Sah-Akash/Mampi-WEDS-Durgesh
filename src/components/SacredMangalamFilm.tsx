@@ -175,24 +175,24 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
 
   useEffect(() => {
     if (!isLocked) return;
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    window.scrollTo(0, 0);
 
-    const preventScroll = (e: Event) => {
-      e.preventDefault();
-    };
+    const originalOverflowHtml = document.documentElement.style.overflow;
+    const originalOverflowBody = document.body.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+
     const preventKeys = (e: KeyboardEvent) => {
       if ([' ', 'ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End'].includes(e.key)) {
         e.preventDefault();
       }
     };
 
-    document.addEventListener('touchmove', preventScroll, { passive: false });
-    document.addEventListener('wheel', preventScroll, { passive: false });
-    document.addEventListener('keydown', preventKeys);
+    window.addEventListener('keydown', preventKeys);
     return () => {
-      document.removeEventListener('touchmove', preventScroll);
-      document.removeEventListener('wheel', preventScroll);
-      document.removeEventListener('keydown', preventKeys);
+      document.documentElement.style.overflow = originalOverflowHtml;
+      document.body.style.overflow = originalOverflowBody;
+      window.removeEventListener('keydown', preventKeys);
     };
   }, [isLocked]);
 
@@ -915,11 +915,9 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
         loadedFlagsRef.current[frameIdx] = true;
         doneCount++;
 
-        if (!readySignaled && (doneCount >= 18 || frameIdx === 0)) {
-          if (doneCount >= 18) {
-            readySignaled = true;
-            setIsInitialReady(true);
-          }
+        if (!readySignaled && (doneCount >= 6 || frameIdx === 0)) {
+          readySignaled = true;
+          setIsInitialReady(true);
         }
 
         if (
@@ -1054,16 +1052,51 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
     };
   }, [piecewise, maxFrameIdx, drawFrameToCanvas, applyProgressToDOM, syncCanvasAndScrollMetrics]);
 
-  // Pause auto-scrolling when user manually interacts (wheel, touch drag, scroll keys)
+  // Touch & user interrupt tracking (optimized for mobile touch screens)
+  const touchStartYRef = useRef<number | null>(null);
+  const autoScrollStartTimeRef = useRef<number>(0);
+  const unlockTriggeredRef = useRef(false);
+
   useEffect(() => {
     if (!isAutoScrolling) return;
 
-    const handleUserInterrupt = (e: Event) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.closest('[data-autoscroll-toggle="true"]')) {
+    autoScrollStartTimeRef.current = Date.now();
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches && e.touches.length > 0) {
+        touchStartYRef.current = e.touches[0].clientY;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      // 850ms grace window after auto-scroll activation so residual tap lifting doesn't pause
+      if (Date.now() - autoScrollStartTimeRef.current < 850) {
         return;
       }
-      setIsAutoScrolling(false);
+      const target = e.target as HTMLElement | null;
+      if (
+        target?.closest('[data-autoscroll-toggle="true"]') ||
+        target?.closest('button') ||
+        target?.closest('a')
+      ) {
+        return;
+      }
+      if (e.touches && e.touches.length > 0 && touchStartYRef.current !== null) {
+        const deltaY = Math.abs(e.touches[0].clientY - touchStartYRef.current);
+        // Only pause if the user intentionally dragged/swiped by more than 22px
+        if (deltaY > 22) {
+          setIsAutoScrolling(false);
+          touchStartYRef.current = null;
+        }
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('[data-autoscroll-toggle="true"]')) return;
+      if (Math.abs(e.deltaY) > 6) {
+        setIsAutoScrolling(false);
+      }
     };
 
     const handleKeyInterrupt = (e: KeyboardEvent) => {
@@ -1072,46 +1105,48 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
       }
     };
 
-    window.addEventListener('wheel', handleUserInterrupt, { passive: true });
-    window.addEventListener('touchmove', handleUserInterrupt, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('wheel', handleWheel, { passive: true });
     window.addEventListener('keydown', handleKeyInterrupt, { passive: true });
 
     return () => {
-      window.removeEventListener('wheel', handleUserInterrupt);
-      window.removeEventListener('touchmove', handleUserInterrupt);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('keydown', handleKeyInterrupt);
     };
   }, [isAutoScrolling]);
 
-  // Ultra-smooth auto-scroll animation loop
+  // Ultra-smooth auto-scroll animation loop (works synchronously on all mobile browsers)
   useEffect(() => {
     if (isLocked || !isAutoScrolling) return;
 
     let animId = 0;
     let lastTime = performance.now();
-    let remainder = 0;
+    let accumulatedDistance = 0;
 
     const autoScrollLoop = (now: number) => {
       const dt = Math.min(64, Math.max(1, now - lastTime));
       lastTime = now;
 
-      // Determine speed based on film position
       const el = containerRef.current;
       let inHold = false;
       let inFilm = true;
+      let currentProgress = 0;
 
       if (el) {
         const rect = el.getBoundingClientRect();
         const totalFilmScroll = Math.max(1, el.offsetHeight - window.innerHeight);
         const scrolledFilm = Math.max(0, -rect.top);
-        const progress = scrolledFilm / totalFilmScroll;
+        currentProgress = Math.min(1, Math.max(0, scrolledFilm / totalFilmScroll));
 
         if (scrolledFilm >= totalFilmScroll) {
           inFilm = false;
         } else {
           for (let i = 0; i < holdStacks.length; i++) {
             const hold = piecewise.windows[holdStacks[i].id];
-            if (hold && progress >= hold.start && progress <= hold.end) {
+            if (hold && currentProgress >= hold.start && currentProgress <= hold.end) {
               inHold = true;
               break;
             }
@@ -1124,19 +1159,48 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
       // In transition frames: ~165px/s (majestic, cinematic camera glide)
       // Below the film (details / itinerary / blessings): ~115px/s
       const speedPxPerSec = inHold ? 88 : inFilm ? 165 : 115;
-      const step = (speedPxPerSec * dt) / 1000 + remainder;
-      const wholeStep = Math.floor(step);
-      remainder = step - wholeStep;
+      accumulatedDistance += (speedPxPerSec * dt) / 1000;
 
-      if (wholeStep > 0) {
-        window.scrollBy(0, wholeStep);
-      }
+      if (accumulatedDistance >= 1) {
+        const toMove = Math.floor(accumulatedDistance);
+        accumulatedDistance -= toMove;
 
-      // Check if reached bottom of document
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      if (window.scrollY >= maxScroll - 8) {
-        setIsAutoScrolling(false);
-        return;
+        const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+        const currentY =
+          window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+        const nextY = Math.min(maxScroll, currentY + toMove);
+
+        // Perform scroll on both window and documentElement for cross-platform mobile compatibility
+        window.scrollTo(0, nextY);
+        if (document.documentElement.scrollTop !== nextY) {
+          document.documentElement.scrollTop = nextY;
+        }
+
+        // Direct canvas & DOM progress sync:
+        // By calculating and drawing immediately in this loop, the film advances smoothly
+        // at 60fps even if mobile WebKit/Android Chrome defers or throttles native scroll events!
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          const totalScrollable = Math.max(1, el.offsetHeight - window.innerHeight);
+          const scrolled = Math.max(0, Math.min(totalScrollable, -rect.top));
+          const directProgress = scrolled / totalScrollable;
+          targetProgressRef.current = directProgress;
+          smoothedProgressRef.current = directProgress;
+
+          const normalizedFrame = interpolatePiecewise(
+            directProgress,
+            piecewise.inputs,
+            piecewise.outputs
+          );
+          drawFrameToCanvas(normalizedFrame * maxFrameIdx);
+          applyProgressToDOM(directProgress);
+        }
+
+        // Stop if reached the very bottom of the document
+        if (nextY >= maxScroll - 6) {
+          setIsAutoScrolling(false);
+          return;
+        }
       }
 
       animId = window.requestAnimationFrame(autoScrollLoop);
@@ -1146,24 +1210,37 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
     return () => {
       if (animId) window.cancelAnimationFrame(animId);
     };
-  }, [isLocked, isAutoScrolling, holdStacks, piecewise]);
+  }, [
+    isLocked,
+    isAutoScrolling,
+    holdStacks,
+    piecewise,
+    maxFrameIdx,
+    drawFrameToCanvas,
+    applyProgressToDOM,
+  ]);
 
-  const handleUnlockAndAutoScroll = () => {
+  const handleUnlockAndAutoScroll = useCallback(() => {
+    if (unlockTriggeredRef.current) return;
+    unlockTriggeredRef.current = true;
     onUnlock();
     // Start auto-scrolling with a gentle delay so the palace doors reveal smoothly first
     window.setTimeout(() => {
       setIsAutoScrolling(true);
-    }, 600);
-  };
+    }, 550);
+  }, [onUnlock]);
 
   const toggleAutoScroll = () => {
+    if (isLocked) {
+      handleUnlockAndAutoScroll();
+      return;
+    }
     setIsAutoScrolling((prev) => {
       const next = !prev;
       if (next) {
-        // If user is at or near the very bottom, restart from beginning
         const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
         if (window.scrollY >= maxScroll - 40) {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          window.scrollTo(0, 0);
         }
       }
       return next;
@@ -1198,12 +1275,12 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
           height: `${totalHeightVh}vh`,
         }}
       >
-        <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
-          <div className="relative w-full h-full overflow-hidden">
+        <div className="sticky top-0 h-[100dvh] h-screen w-full overflow-hidden flex items-center justify-center touch-pan-y">
+          <div className="relative w-full h-full overflow-hidden touch-pan-y">
             <canvas
               ref={canvasRef}
-              className="absolute inset-0 w-full h-full block"
-              style={{ willChange: 'contents', transform: 'translateZ(0)' }}
+              className="absolute inset-0 w-full h-full block touch-pan-y"
+              style={{ willChange: 'contents', transform: 'translateZ(0)', touchAction: 'pan-y' }}
             />
 
             {!isInitialReady && (
@@ -1368,8 +1445,13 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
               <button
                 type="button"
                 onClick={handleUnlockAndAutoScroll}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleUnlockAndAutoScroll();
+                }}
                 data-rec="gate-open"
-                className="mb-[5vh] sm:mb-[6vh] cursor-pointer focus:outline-none"
+                className="mb-[5vh] sm:mb-[6vh] cursor-pointer focus:outline-none touch-manipulation select-none pointer-events-auto"
                 aria-label="Tap to Open Mampi Weds Durgesh Wedding Invitation"
               >
                 <span
@@ -1419,12 +1501,18 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
       </div>
 
       {/* FLOATING ROYAL CONTROLS DOCK (MUSIC & AUTO-SCROLL) */}
-      <div className="fixed bottom-5 left-4 sm:left-6 z-[70] flex items-center gap-2.5 select-none">
+      <div
+        className="fixed z-[70] flex items-center gap-2.5 select-none touch-manipulation"
+        style={{
+          bottom: 'max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))',
+          left: 'max(1rem, env(safe-area-inset-left, 0px))',
+        }}
+      >
         {/* MUSIC TOGGLE BUTTON */}
         <button
           type="button"
           onClick={onToggleMusic}
-          className="w-10 h-10 rounded-full bg-[#2A0812]/90 border border-[#C6A15B]/70 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex items-center justify-center transition-transform duration-200 active:scale-90 cursor-pointer hover:border-[#E7D6AD]"
+          className="w-10 h-10 rounded-full bg-[#2A0812]/90 border border-[#C6A15B]/70 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex items-center justify-center transition-transform duration-200 active:scale-90 cursor-pointer hover:border-[#E7D6AD] touch-manipulation"
           aria-label={isMusicPlaying ? 'Pause music' : 'Play music'}
           title={isMusicPlaying ? 'Mute Music' : 'Play Music'}
         >
@@ -1450,7 +1538,7 @@ export const SacredMangalamFilm: React.FC<SacredMangalamFilmProps> = ({
           type="button"
           data-autoscroll-toggle="true"
           onClick={toggleAutoScroll}
-          className={`h-10 px-3.5 rounded-full backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex items-center gap-1.5 transition-all duration-300 active:scale-95 cursor-pointer border ${
+          className={`h-10 px-3.5 rounded-full backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex items-center gap-1.5 transition-all duration-300 active:scale-95 cursor-pointer border touch-manipulation ${
             isAutoScrolling
               ? 'bg-[#C6A15B] text-[#2A0812] border-[#F8F0E3] shadow-[0_0_18px_rgba(198,161,91,0.6)] font-semibold'
               : 'bg-[#2A0812]/90 text-[#E7D6AD] border-[#C6A15B]/70 hover:border-[#E7D6AD]'
